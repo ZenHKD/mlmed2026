@@ -1,6 +1,6 @@
 USTH Machine Learning in Medicine 2026
 ==================================
 
-* Your name here
-* Your ID here
-* Your team ID here
+* Name: Hoang Khanh Dong
+* ID: 22BA13072
+* Team ID: 
