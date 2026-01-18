@@ -2,7 +2,7 @@
 /practice1/__pycache__
 practice1.aux
 practice1.log
-
+practice1.out
 *.pyc
 *__pycache__*
 *__pycache__/*
