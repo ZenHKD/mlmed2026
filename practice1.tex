@@ -1,0 +1,128 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage{graphicx}
+\usepackage{float}
+
+\title{Practice 1: A Study of ECG Heartbeat Categorization Using Convolutional Neural Networks}
+\author{Hoang Khanh Dong - 22BA13072}
+
+\date{February 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This small report presents a study on ECG heartbeat categorization using 1D Convolutional Neural Networks. I utilize the MIT-BIH Arrhythmia Dataset to classify heartbeats into five distinct categories. My approach employs a deep learning architecture with skip connections to achieve robust classification performance while addressing the challenge of highly imbalanced data through resampling techniques.
+\end{abstract}
+
+\section{Introduction}
+
+Electrocardiogram (ECG) signals are crucial for diagnosing various cardiac conditions. Automated classification of ECG heartbeats can significantly assist medical professionals in identifying different types of arrhythmias. This study focuses on developing a deep learning model capable of accurately categorizing heartbeats into five classes: Normal (N), Supraventricular (S), Ventricular (V), Fusion (F), and Unknown (Q).
+
+The primary challenge in this task lies in the severe class imbalance present in real-world ECG data, where normal heartbeats vastly outnumber abnormal ones. I address this through careful data preprocessing and model design.
+
+\section{Dataset}
+
+\subsection{Data Exploration}
+The MIT-BIH Arrhythmia Dataset initially shows a significant class imbalance. The original training set consists of 87,554 samples. As illustrated in Figure \ref{fig:class_dist}, the normal heartbeats (class N) dominate the dataset, which can lead to a biased model if it is not addressed correctly.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{practice1/images/class_distribution.png}
+    \caption{Original Class Distribution showing severe imbalance.}
+    \label{fig:class_dist}
+\end{figure}
+
+To address this imbalance, I applied a hybrid resampling strategy combining random undersampling for the majority class and random oversampling for minority classes. This resulted in a perfectly balanced training dataset of 50,000 samples, with exactly 10,000 samples for each of the five categories, as depicted in Figure \ref{fig:balanced_dist}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{practice1/images/balance_class_distribution.png}
+    \caption{Balanced Class Distribution after hybrid resampling.}
+    \label{fig:balanced_dist}
+\end{figure}
+
+For the evaluation, I utilized a test set containing 21,892 samples. The test set distribution is: Normal (N): 18,118, Supraventricular (S): 556, Ventricular (V): 1,448, Fusion (F): 162, and Unknown (Q): 1,608 samples.
+
+\section{Methodology}
+
+\subsection{Model Architecture}
+My model is a 1D Convolutional Neural Network specifically designed for sequential ECG data. The architecture incorporates skip connections inspired by ResNet to facilitate gradient flow and improve training stability. A visual representation of the architecture is provided in Figure \ref{fig:arch}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{practice1/images/architect.png}
+    \caption{Model Architecture.}
+    \label{fig:arch}
+\end{figure}
+
+\subsubsection{Network Components}
+
+The model begins with an input layer accepting ECG signals of shape (batch\_size, 1, 187). The core feature extraction is performed by four sequential convolutional blocks. Each block consists of a 1D convolution with a kernel size of 5 and padding of 2, followed by Batch Normalization, a ReLU activation function, Max Pooling with a kernel size of 2, and finally a Dropout layer with a probability of 0.2 to prevent overfitting. The number of filters in these blocks progressively increases from 32 to 64, then to 128, and finally to 256.
+
+Crucially, the network employs skip connections to improve gradient flow. A first skip connection links the input directly to the output of the second convolutional block (transforming 1 channel to 64), while a second skip connection connects the output of the first block to the output of the third block (32 channels to 128).
+
+The classification head consists of a Flatten layer followed by a fully connected network. It projects the features to 128 units, applies ReLU activation and a Dropout of 0.3, and concludes with a final Linear layer mapping the 128 features to the 5 output classes.
+
+
+\subsection{Training Strategy}
+
+The model was trained using the Adam optimizer and Cross-Entropy Loss. I employed a batch size of 32 with 30 epochs. A key part of the strategy was the model selection process, where the best model was automatically saved based on validation performance during training. The training progression, showing loss and accuracy over epochs, can be seen in Figure \ref{fig:training}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{practice1/images/training.png}
+    \caption{Training and Validation Accuracy/Loss over Epochs.}
+    \label{fig:training}
+\end{figure}
+
+\section{Results}
+
+
+\subsection{Model Performance}
+
+The model achieved an impressive best test accuracy of \textbf{97.22\%}. The balanced dataset approach ensured the model received equal exposure to all classes during training, preventing bias towards the majority class. The best performing model was automatically saved to \texttt{best\_model\_cnn1d.pth} (file size: 2.38 MB).
+
+Detailed performance metrics for each class are presented in Table \ref{tab:classification_report}.
+
+\begin{table}[H]
+\centering
+\caption{Classification Report}
+\label{tab:classification_report}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Class} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{Support} \\ \hline
+0 (N)          & 0.99               & 0.97            & 0.98              & 18118            \\
+1 (S)          & 0.69               & 0.87            & 0.77              & 556              \\
+2 (V)          & 0.93               & 0.97            & 0.95              & 1448             \\
+3 (F)          & 0.46               & 0.89            & 0.61              & 162              \\
+4 (Q)          & 0.98               & 0.99            & 0.99              & 1608             \\ \hline
+\textbf{Accuracy} &                   &                 & \textbf{0.97}     & 21892            \\
+Macro Avg      & 0.81               & 0.94            & 0.86              & 21892            \\
+Weighted Avg   & 0.98               & 0.97            & 0.97              & 21892            \\ \hline
+\end{tabular}
+\end{table}
+
+To further analyze the performance, I generated a confusion matrix (Figure \ref{fig:cm}) and a normalized confusion matrix (Figure \ref{fig:norm_cm}). These visualizations confirm that the model performs well across all five categories, with high diagonal values indicating correct classifications.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{practice1/images/cm.png}
+    \caption{Confusion Matrix.}
+    \label{fig:cm}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{practice1/images/normalized_cm.png}
+    \caption{Normalized Confusion Matrix.}
+    \label{fig:norm_cm}
+\end{figure}
+
+\section{Conclusion}
+
+This study demonstrates the effectiveness of 1D Convolutional Neural Networks with skip connections for ECG heartbeat classification. My model achieved an accuracy of \textbf{97.22\%} on the test set. When compared to the original paper "ECG Heartbeat Classification: A Deep Transferable Representation" (Arxiv 1805.00794), which reported an average accuracy of \textbf{93.4\%} for arrhythmia classification, my approach shows a significant improvement. This suggests that the combination of a robust architecture and careful data balancing is highly effective for this task.
+
+\end{document}
+

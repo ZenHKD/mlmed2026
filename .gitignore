@@ -1,8 +1,8 @@
-report-template.log
-report-template.aux
-report-template.pdf
 /practice1/archive
 /practice1/__pycache__
+practice1.aux
+practice1.log
+
 *.pyc
 *__pycache__*
 *__pycache__/*
