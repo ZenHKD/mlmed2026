@@ -1,8 +1,17 @@
 /practice1/archive
 /practice1/__pycache__
+
+/practice2/data
+/practice2/__pycache__
+
 practice1.aux
 practice1.log
 practice1.out
+
+practice2.aux
+practice2.log
+practice2.out
+
 *.pyc
 *__pycache__*
 *__pycache__/*
