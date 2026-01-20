@@ -11,7 +11,7 @@ from extract_label import label
 
 
 class HCDataset(Dataset):
-    def __init__(self, csv_path, img_dir, img_size=(256, 256)):
+    def __init__(self, csv_path, img_dir, img_size=(512, 512)):
         self.df = pd.read_csv(csv_path)
         self.img_dir = img_dir
         self.img_size = img_size
@@ -108,7 +108,7 @@ def main():
     log_path = os.path.join(script_dir, 'training_log.json')
     
     # Hyperparameters
-    img_size = (256, 256)
+    img_size = (512, 512)
     batch_size = 4
     num_epochs = 100
     learning_rate = 1e-4
@@ -123,9 +123,10 @@ def main():
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
     
-    print(f"Training samples: {train_size}, Validation samples: {val_size}")
+    print(f"Training samples: {train_size}, Validation samples: {val_size} - ({val_split*100}%)")
     print(f"Image size: {img_size}, Batch size: {batch_size}")
-    print("-" * 90)
+    print(f"Number of epochs: {num_epochs}")
+    print("-" * 100)
     
     # Model
     model = CU_Net(in_channels=1, num_classes=1).to(device)

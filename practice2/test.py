@@ -6,7 +6,7 @@ import pandas as pd
 from model import CU_Net
 
 
-def predict(model, img_path, device, img_size=(256, 256)):
+def predict(model, img_path, device, img_size=(512, 512)):
     """Predict segmentation mask for a single image"""
     # Load and preprocess
     img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
