@@ -25,7 +25,6 @@ The primary challenge in this task lies in the severe class imbalance present in
 
 \section{Dataset}
 
-\subsection{Data Exploration}
 The MIT-BIH Arrhythmia Dataset initially shows a significant class imbalance. The original training set consists of 87,554 samples. As illustrated in Figure \ref{fig:class_dist}, the normal heartbeats (class N) dominate the dataset, which can lead to a biased model if it is not addressed correctly.
 
 \begin{figure}[H]
@@ -79,9 +78,6 @@ The model was trained using the Adam optimizer and Cross-Entropy Loss. I employe
 \end{figure}
 
 \section{Results}
-
-
-\subsection{Model Performance}
 
 The model achieved an impressive best test accuracy of \textbf{97.22\%}. The balanced dataset approach ensured the model received equal exposure to all classes during training, preventing bias towards the majority class. The best performing model was automatically saved to \texttt{best\_model\_cnn1d.pth} (file size: 2.38 MB).
 
