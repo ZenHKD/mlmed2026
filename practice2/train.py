@@ -11,7 +11,7 @@ from extract_label import label
 
 
 class HCDataset(Dataset):
-    def __init__(self, csv_path, img_dir, img_size=(512, 512)):
+    def __init__(self, csv_path, img_dir, img_size=(256, 256)):
         self.df = pd.read_csv(csv_path)
         self.img_dir = img_dir
         self.img_size = img_size
@@ -108,7 +108,7 @@ def main():
     log_path = os.path.join(script_dir, 'training_log.json')
     
     # Hyperparameters
-    img_size = (512, 512)
+    img_size = (256, 256)
     batch_size = 4
     num_epochs = 100
     learning_rate = 1e-4
