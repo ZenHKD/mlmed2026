@@ -160,11 +160,17 @@ def main():
     mse = np.mean((valid_preds - valid_gts) ** 2)
     rmse = np.sqrt(mse)
     
+    # Percentage-based metrics
+    mape = np.mean(np.abs((valid_gts - valid_preds) / valid_gts)) * 100
+    rmspe = np.sqrt(np.mean(((valid_gts - valid_preds) / valid_gts) ** 2)) * 100
+    
     print("\n--- Validation Results ---")
     print(f"Total processed: {len(predictions)}")
     print(f"Valid predictions: {len(valid_preds)}")
     print(f"Mean Absolute Error (MAE): {mae:.2f} mm")
     print(f"Root Mean Squared Error (RMSE): {rmse:.2f} mm")
+    print(f"Mean Absolute Percentage Error (MAPE): {mape:.2f}%")
+    print(f"Root Mean Squared Percentage Error (RMSPE): {rmspe:.2f}%")
     
     # R-squared
     ss_res = np.sum((valid_gts - valid_preds) ** 2)

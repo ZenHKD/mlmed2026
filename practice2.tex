@@ -3,6 +3,7 @@
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{hyperref}
+\usepackage{amsmath}
 
 \title{Practice 2: A Study of Deep Learning for Measurement of The Fetal Head Circumference}
 \author{Hoang Khanh Dong - 22BA13072}
@@ -28,7 +29,7 @@ In the test set, there is 327 over 335 (97.6\%) images with the size of 800x540 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\linewidth]{practice2/data/training_set/000_HC.png}
+    \includegraphics[width=0.8\linewidth]{practice2/data/training_set/001_HC.png}
     \caption{Example of a 2D ultrasound image from the HC18 dataset.}
     \label{fig:example}
 \end{figure}
@@ -89,7 +90,27 @@ Figure \ref{fig:loss} illustrates the training and validation loss over 100 epoc
 
 \subsection{Measurement of Fetal Head Circumference}
 
+After obtaining the segmentation mask from the CU-Net model, the head circumference is computed through a series of image processing and geometric fitting steps.
 
+First, the predicted probability mask is binarized using a threshold of 0.5. Contour detection is then applied to extract the boundary of the segmented region. The largest contour is selected, assuming it corresponds to the fetal head. An ellipse is fitted to this contour using the least-squares method, which returns the center coordinates $(x, y)$, the major axis diameter $MA$, the minor axis diameter $ma$, and the rotation angle.
+
+The semi-major axis $a$ and semi-minor axis $b$ are computed as:
+\begin{equation}
+    a = \frac{MA}{2}, \quad b = \frac{ma}{2}
+\end{equation}
+
+The perimeter of an ellipse does not have a closed-form solution, so I use Ramanujan's second approximation:
+\begin{equation}
+    h = \frac{(a - b)^2}{(a + b)^2}
+\end{equation}
+\begin{equation}
+    P \approx \pi (a + b) \left( 1 + \frac{3h}{10 + \sqrt{4 - 3h}} \right)
+\end{equation}
+
+where $P$ is the perimeter in pixels. Finally, the head circumference in millimeters is obtained by multiplying the perimeter by the pixel size provided in the dataset:
+\begin{equation}
+    HC_{mm} = P \times \text{pixel\_size}
+\end{equation}
 
 \section{Result}
 
