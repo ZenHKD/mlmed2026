@@ -13,19 +13,40 @@
 \maketitle
 
 \begin{abstract}
-Accurate measurement of fetal head circumference (HC) from ultrasound images is essential for monitoring fetal growth and estimating gestational age during pregnancy. Manual measurement by sonographers is time-consuming and subject to inter-observer variability. This study presents a deep learning-based approach for automated HC measurement using 2D ultrasound images from the HC18 Grand Challenge dataset. Semantic segmentation is used to delineate the fetal head boundary, followed by an ellipse fitting algorithm to compute the circumference. The methodology demonstrates the potential of deep learning techniques to assist clinicians in obtaining accurate and consistent fetal biometric measurements.
+Accurate measurement of fetal head circumference (HC) from ultrasound images is essential for monitoring fetal growth and estimating gestational age during pregnancy. Manual measurement by sonographers is time-consuming and subject to inter-observer variability. This study presents a deep learning-based approach for automated HC measurement using 2D ultrasound images from the HC18 Grand Challenge dataset
 \end{abstract}
 
 \section{Introduction}
-
+My approach contains two main steps. First, semantic segmentation is used to delineate the fetal head boundary, followed by an ellipse fitting algorithm to compute the circumference. The methodology demonstrates the potential of deep learning techniques to assist clinicians in obtaining accurate and consistent fetal biometric measurements.
 
 \section{Dataset}
+The dataset is from the HC18 Grand Challenge dataset, which contains 1334 2D ultrasound images (999 training, 335 testing) with pixel sizes from 0.052 to 0.326mm. The images are of variable size and quality, with different levels of noise and artifacts. 
+
+In the training set, there is 975 over 999 (97.6\%) images with the size of 800x540 pixels, and the rest of the images are of different sizes. 
+
+In the test set, there is 327 over 335 (97.6\%) images with the size of 800x540 pixels, and the rest of the images are also of different sizes. 
 
 \section{Methodology}
 
 \subsection{Semantic Segmentation}
 
 \subsubsection{Model Architecture}
+My model takes the idea from the CU-Net architecture (Cascade U-Net) which is a convolutional neural network that is widely used for semantic segmentation tasks. The model is composed of two encoder-decoder paths, which is slightly modified from the original architecture. A visualization of the model architecture is shown in Figure \ref{fig:model_architecture}.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\textwidth]{practice2/images/architecture.png}
+    \caption{Model Architecture}
+    \label{fig:model_architecture}
+\end{figure*}
+
+\subsubsection{Network Components}
+
+The model begins with an input layer accepting grayscale ultrasound images of shape (batch\_size, 1, 256, 256). The first U-Net performs initial feature extraction through an encoder-decoder structure. The encoder path consists of four downsampling stages using DoubleConv blocks, where each block contains two 3$\times$3 convolutions with Batch Normalization and ReLU activation, plus a residual shortcut connection for improved gradient flow. The number of channels progressively increases from 16 to 32, then to 64, 128, and finally 256 at the bottleneck. Each downsampling stage applies Max Pooling with a kernel size of 2.
+
+The decoder path mirrors the encoder with four upsampling stages using transposed convolutions, and skip connections that concatenate encoder features with decoder features at each level. Crucially, the first U-Net employs deep supervision, where the outputs from all decoder levels are projected to a single channel using 1$\times$1 convolutions, upsampled to the original resolution using bilinear interpolation, and summed together.
+
+The second U-Net refines the initial segmentation by receiving the output from the first U-Net. It additionally incorporates skip connections from the decoder features of the first U-Net, allowing the second network to leverage multi-scale features from the first stage. The second U-Net follows the same structure with deep supervision. The final prediction is obtained by fusing the outputs from both U-Net branches, enabling the model to capture both coarse and fine-grained features for accurate boundary delineation.
 
 \subsubsection{Training Strategy}
 
