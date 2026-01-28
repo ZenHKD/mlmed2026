@@ -1,80 +1,10 @@
 import os
 import torch
-import cv2
 import pandas as pd
-import numpy as np
 from model import CU_Net
 from tqdm import tqdm
+from val_reg import predict_mask, get_hc_from_mask
 
-def calculate_ellipse_perimeter(a, b):
-    """
-    Calculate the perimeter of an ellipse using Ramanujan's approximation.
-    a: semi-major axis (width/2)
-    b: semi-minor axis (height/2)
-    """
-    # Ramanujan's second approximation
-    h = ((a - b) ** 2) / ((a + b) ** 2)
-    perimeter = np.pi * (a + b) * (1 + (3 * h) / (10 + np.sqrt(4 - 3 * h)))
-    return perimeter
-
-def predict_mask(model, img_path, device, img_size=(256, 256)):
-    """Predict segmentation mask for a single image"""
-    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-    if img is None:
-        raise FileNotFoundError(f"Colud not open {img_path}")
-        
-    original_size = img.shape[:2]
-    img_resized = cv2.resize(img, img_size)
-    img_tensor = torch.tensor(img_resized.astype(np.float32) / 255.0).unsqueeze(0).unsqueeze(0)
-    
-    model.eval()
-    with torch.no_grad():
-        img_tensor = img_tensor.to(device)
-        output = model(img_tensor)
-        mask_prob = torch.sigmoid(output).cpu().numpy()[0, 0]
-    
-    # Resize back to original size
-    mask_prob = cv2.resize(mask_prob, (original_size[1], original_size[0]))
-    return mask_prob
-
-def get_hc_from_mask(mask, pixel_size):
-    """
-    Calculate Head Circumference (HC) from segmentation mask.
-    """
-    # Threshold mask
-    mask_binary = (mask > 0.5).astype(np.uint8)
-    
-    # Find contours
-    contours, _ = cv2.findContours(mask_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    
-    if not contours:
-        return 0.0
-    
-    # Get largest contour (assuming it's the head)
-    largest_contour = max(contours, key=cv2.contourArea)
-    
-    # Need at least 5 points to fit an ellipse
-    if len(largest_contour) < 5:
-        return 0.0
-        
-    try:
-        # Fit ellipse
-        (x, y), (MA, ma), angle = cv2.fitEllipse(largest_contour)
-        
-        # MA/ma are Major/minor Axis Diameters -> convert to semi-axes (radius)
-        a = MA / 2
-        b = ma / 2
-        
-        # Calculate perimeter in pixels
-        perimeter_pixels = calculate_ellipse_perimeter(a, b)
-        
-        # Convert to mm
-        hc_mm = perimeter_pixels * pixel_size
-        return hc_mm
-        
-    except Exception as e:
-        print(f"Error fitting ellipse: {e}")
-        return 0.0
 
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

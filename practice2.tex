@@ -70,7 +70,7 @@ The decoder path mirrors the encoder with four upsampling stages using transpose
 
 The second U-Net refines the initial segmentation by receiving the output from the first U-Net. It additionally incorporates skip connections from the decoder features of the first U-Net, allowing the second network to leverage multi-scale features from the first stage. The second U-Net follows the same structure with deep supervision. The final prediction is obtained by fusing the outputs from both U-Net branches, enabling the model to capture both coarse and fine-grained features for accurate boundary delineation.
 
-\subsubsection{Training Strategy}
+\subsection{Training Strategy}
 
 The model was trained using the Adam optimizer with a learning rate of $1 \times 10^{-4}$ and Binary Cross-Entropy with Logits Loss as the objective function. I employed a batch size of 4 with 100 epochs. The dataset was split into 90\% for training (999 images) and 10\% for validation (99 images) using a fixed random seed for reproducibility.
 
@@ -89,7 +89,7 @@ Figure \ref{fig:loss} illustrates the training and validation loss over 100 epoc
 
 \subsection{Measurement of Fetal Head Circumference}
 
-\subsubsection{Algorithm}
+
 
 \section{Result}
 

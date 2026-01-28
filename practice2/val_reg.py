@@ -58,24 +58,20 @@ def get_hc_from_mask(mask, pixel_size):
     if len(largest_contour) < 5:
         return 0.0
         
-    try:
-        # Fit ellipse
-        (x, y), (MA, ma), angle = cv2.fitEllipse(largest_contour)
+    # Fit ellipse
+    (x, y), (MA, ma), angle = cv2.fitEllipse(largest_contour)
         
-        # MA/ma are Major/minor Axis Diameters -> convert to semi-axes (radius)
-        a = MA / 2
-        b = ma / 2
+    # MA/ma are Major/minor Axis Diameters -> convert to semi-axes (radius)
+    a = MA / 2
+    b = ma / 2
         
-        # Calculate perimeter in pixels
-        perimeter_pixels = calculate_ellipse_perimeter(a, b)
+    # Calculate perimeter in pixels
+    perimeter_pixels = calculate_ellipse_perimeter(a, b)
         
-        # Convert to mm
-        hc_mm = perimeter_pixels * pixel_size
-        return hc_mm
+    # Convert to mm
+    hc_mm = perimeter_pixels * pixel_size
+    return hc_mm
         
-    except Exception as e:
-        print(f"Error fitting ellipse: {e}")
-        return 0.0
 
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
