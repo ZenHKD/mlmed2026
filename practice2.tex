@@ -78,6 +78,15 @@ A key part of the strategy was the use of a ReduceLROnPlateau learning rate sche
 
 For evaluation metrics, I used Dice coefficient and Intersection over Union (IoU), which are standard metrics for segmentation tasks. Images were resized to 256$\times$256 pixels and normalized to the range [0, 1] before feeding to the network.
 
+Figure \ref{fig:loss} illustrates the training and validation loss over 100 epochs. The model demonstrates rapid convergence within the first 20 epochs. While the training loss continues to decrease, the validation loss starts to increase from epoch 20, indicating that the model can be mild overfitting in the later stages. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{practice2/images/loss.png}
+    \caption{Training and validation loss curves.}
+    \label{fig:loss}
+\end{figure}
+
 \subsection{Measurement of Fetal Head Circumference}
 
 \subsubsection{Algorithm}
