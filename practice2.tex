@@ -116,7 +116,58 @@ where $P$ is the perimeter in pixels. Finally, the head circumference in millime
 
 \subsection{Semantic Segmentation}
 
+The CU-Net model achieved strong segmentation performance on the validation set. After 100 epochs of training, the best model reached a Dice coefficient of \textbf{0.9733} and an Intersection over Union (IoU) of \textbf{0.9480} at epoch 93. 
+
+Figure \ref{fig:dice} and Figure \ref{fig:iou} show the Dice and IoU curves during training. Both metrics rapidly improve within the first 20 epochs and stabilize at high values, consistent with the loss curves discussed earlier.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{practice2/images/dice.png}
+    \caption{Dice coefficient over training epochs.}
+    \label{fig:dice}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{practice2/images/iou.png}
+    \caption{IoU score over training epochs.}
+    \label{fig:iou}
+\end{figure}
+
 \subsection{Measurement of Fetal Head Circumference}
+
+The head circumference was computed from the predicted segmentation masks using ellipse fitting and Ramanujan's perimeter approximation. On the validation set of 99 images, 100\% of predictions were valid (all masks produced a contour suitable for ellipse fitting).
+
+The regression analysis yielded excellent results, summarized in Table \ref{tab:reg_results}. The model achieved a Mean Absolute Percentage Error of only 1.79\%, indicating near-perfect linear correlation between predicted and ground truth measurements.
+
+\begin{table}[H]
+    \centering
+    \caption{Head Circumference Measurement Results on Validation Set}
+    \label{tab:reg_results}
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Metric} & \textbf{Value} \\
+        \hline
+        Total Samples & 99 \\
+        Valid Predictions & 99 (100\%) \\
+        \hline
+        Mean Absolute Error (MAE) & 2.33 mm \\
+        Root Mean Squared Error (RMSE) & 3.98 mm \\
+        Mean Absolute Percentage Error (MAPE) & 1.79\% \\
+        Root Mean Squared Percentage Error (RMSPE) & 4.84\% \\
+        R-squared ($R^2$) & 0.9962 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Figure \ref{fig:reg} shows the scatter plot of predicted versus ground truth head circumference values. The points closely follow the ideal diagonal line, confirming the high accuracy of the measurement pipeline.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{practice2/images/reg.png}
+    \caption{Regression analysis of predicted vs. ground truth head circumference.}
+    \label{fig:reg}
+\end{figure}
 
 \section{Discussion}
 
