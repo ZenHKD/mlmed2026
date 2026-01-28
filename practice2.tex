@@ -26,19 +26,41 @@ In the training set, there is 975 over 999 (97.6\%) images with the size of 800x
 
 In the test set, there is 327 over 335 (97.6\%) images with the size of 800x540 pixels, and the rest of the images are also of different sizes. 
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{practice2/data/training_set/000_HC.png}
+    \caption{Example of a 2D ultrasound image from the HC18 dataset.}
+    \label{fig:example}
+\end{figure}
+
 \section{Methodology}
+
+\subsection{Data Preprocessing}
+
+The HC18 dataset provides ellipse annotations as outline images rather than filled segmentation masks. To prepare the ground truth for training, I implemented a label extraction pipeline. 
+
+First, the annotation image is loaded in grayscale and binarized using a threshold of 127. Next, contour detection is applied using the external contour retrieval mode to extract the ellipse boundary. Finally, the detected contour is filled to create a solid binary mask where pixels inside the fetal head region are set to 1 and background pixels to 0. 
+
+This filled mask serves as the ground truth segmentation label for training the neural network.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{practice2/images/overlay.pdf}
+    \caption{Overlay of the ultrasound image and the ground truth segmentation mask.}
+    \label{fig:overlay}
+\end{figure}
 
 \subsection{Semantic Segmentation}
 
 \subsubsection{Model Architecture}
 My model takes the idea from the CU-Net architecture (Cascade U-Net) which is a convolutional neural network that is widely used for semantic segmentation tasks. The model is composed of two encoder-decoder paths, which is slightly modified from the original architecture. A visualization of the model architecture is shown in Figure \ref{fig:model_architecture}.
 
-\begin{figure*}[t]
+\begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{practice2/images/architecture.png}
+    \includegraphics[width=2.3\linewidth, angle=90]{practice2/images/architecture.pdf}
     \caption{Model Architecture}
     \label{fig:model_architecture}
-\end{figure*}
+\end{figure}
 
 \subsubsection{Network Components}
 
@@ -50,11 +72,21 @@ The second U-Net refines the initial segmentation by receiving the output from t
 
 \subsubsection{Training Strategy}
 
+The model was trained using the Adam optimizer with a learning rate of $1 \times 10^{-4}$ and Binary Cross-Entropy with Logits Loss as the objective function. I employed a batch size of 4 with 100 epochs. The dataset was split into 90\% for training (999 images) and 10\% for validation (99 images) using a fixed random seed for reproducibility.
+
+A key part of the strategy was the use of a ReduceLROnPlateau learning rate scheduler, which monitors the validation Dice score and reduces the learning rate by a factor of 0.5 if no improvement is observed for 10 consecutive epochs. This allows the model to escape local minima and continue learning. The best model was automatically saved based on the highest validation Dice score during training.
+
+For evaluation metrics, I used Dice coefficient and Intersection over Union (IoU), which are standard metrics for segmentation tasks. Images were resized to 256$\times$256 pixels and normalized to the range [0, 1] before feeding to the network.
+
 \subsection{Measurement of Fetal Head Circumference}
 
 \subsubsection{Algorithm}
 
 \section{Result}
+
+\subsection{Semantic Segmentation}
+
+\subsection{Measurement of Fetal Head Circumference}
 
 \section{Discussion}
 

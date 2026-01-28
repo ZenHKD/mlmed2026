@@ -37,5 +37,6 @@ if __name__ == "__main__":
     overlay = (1 - alpha) * img_rgb + alpha * (0.6 * img_rgb + 0.4 * green)
     overlay = np.clip(overlay, 0, 255).astype(np.uint8)
 
+    plt.figure(dpi=200)
     plt.imshow(overlay)
-    plt.show()
+    plt.savefig("practice2/images/overlay.pdf", format="pdf", bbox_inches='tight', pad_inches=0)
