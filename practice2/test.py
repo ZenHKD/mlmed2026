@@ -36,7 +36,7 @@ def create_overlay(img_path, mask):
     alpha = mask_binary[..., np.newaxis]  # expand to (H, W, 1) for broadcasting
     
     # Green overlay color
-    green = np.array([0, 255, 0], dtype=np.float32)  # RGB green
+    green = np.array([0, 255, 0], dtype=np.float32)  
     
     # Blend: where mask is 1, mix 60% image + 40% green
     overlay = (1 - alpha) * img_rgb + alpha * (0.6 * img_rgb + 0.4 * green)
