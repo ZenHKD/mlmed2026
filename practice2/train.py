@@ -1,5 +1,4 @@
 import os
-import json
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader, random_split
@@ -105,7 +104,7 @@ def main():
     train_csv = os.path.join(script_dir, 'data/training_set_pixel_size_and_HC.csv')
     train_dir = os.path.join(script_dir, 'data/training_set')
     best_model_path = os.path.join(script_dir, 'best_model.pth')
-    log_path = os.path.join(script_dir, 'training_log.json')
+    log_path = os.path.join(script_dir, 'training_log.csv')
     
     # Hyperparameters
     img_size = (256, 256)
@@ -118,7 +117,44 @@ def main():
     full_dataset = HCDataset(train_csv, train_dir, img_size=img_size)
     val_size = int(len(full_dataset) * val_split)
     train_size = len(full_dataset) - val_size
-    train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
+    
+    # Split
+    split_path = os.path.join(script_dir, 'data_split.csv')
+    
+    if os.path.exists(split_path):
+        df_split = pd.read_csv(split_path)
+        train_filenames = df_split['train'].dropna().tolist()
+        val_filenames = df_split['val'].dropna().tolist()
+        
+        # Map filenames to indices
+        filename_to_idx = {name: idx for idx, name in enumerate(full_dataset.df['filename'])}
+        
+        train_indices = [filename_to_idx[name] for name in train_filenames if name in filename_to_idx]
+        val_indices = [filename_to_idx[name] for name in val_filenames if name in filename_to_idx]
+        
+        print(f"Loaded existing split from {split_path}")
+        
+        train_dataset = torch.utils.data.Subset(full_dataset, train_indices)
+        val_dataset = torch.utils.data.Subset(full_dataset, val_indices)
+    else:
+        # Fixed random shuffle for reproducibility
+        g = torch.Generator().manual_seed(42)
+        train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size], generator=g)
+        
+        # Get filenames from indices
+        train_indices = train_dataset.indices
+        val_indices = val_dataset.indices
+        
+        train_filenames = full_dataset.df.iloc[train_indices]['filename'].values
+        val_filenames = full_dataset.df.iloc[val_indices]['filename'].values
+        
+        # Save filenames
+        df_split = pd.DataFrame({
+            'train': pd.Series(train_filenames),
+            'val': pd.Series(val_filenames)
+        })
+        df_split.to_csv(split_path, index=False)
+        print(f"Created and saved new split to {split_path}")
     
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
@@ -156,9 +192,8 @@ def main():
         }
         training_history.append(epoch_log)
         
-        # Save training history to JSON immediately
-        with open(log_path, 'w') as f:
-            json.dump(training_history, f, indent=2)
+        # Save training history to CSV immediately
+        pd.DataFrame(training_history).to_csv(log_path, index=False)
             
         # Save best model (based on val_dice)
         if val_dice > best_val_dice:
@@ -173,12 +208,6 @@ def main():
     print("-" * 100)
     print(f"Training complete! Best validation Dice: {best_val_dice:.6f}")
     print(f"Best model saved to: {best_model_path}")
-    
-    # Save whole training history to JSON
-    with open(log_path, 'w') as f:
-        json.dump(training_history, f, indent=2)
-    print(f"Training log saved to: {log_path}")
-
 
 if __name__ == "__main__":
     main()
