@@ -52,7 +52,7 @@ def test_model():
     model.eval()
     with torch.no_grad():
         start_time = time.time()
-        lung_mask, infection_mask, class_logits = model(x)
+        lung_mask, infection_mask, class_logits = model(x)  # Uses default use_infection=True
         elapsed = time.time() - start_time
     
     print(f"    Forward time: {elapsed*1000:.2f} ms")

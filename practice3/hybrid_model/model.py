@@ -30,28 +30,47 @@ class SegmentationHead(nn.Module):
 
 
 class ClassificationHead(nn.Module):
-    """Conv + GAP + FC for 3-class classification from combined masks."""
+    """
+    Conv + GAP + FC for 3-class classification.
     
-    def __init__(self, in_channels, num_classes=3):
+    Supports two modes:
+    - Phase 1 (use_infection=False): Uses only lung mask (in_channels=1)
+    - Phase 2 (use_infection=True): Uses both lung and infection masks (in_channels=2)
+    """
+    
+    def __init__(self, num_classes=3):
         super().__init__()
-        self.conv = nn.Sequential(
-            nn.Conv2d(in_channels, 64, kernel_size=3, padding=1, bias=False),
+        # Phase 1: lung only (1 channel)
+        self.conv_lung = nn.Sequential(
+            nn.Conv2d(1, 64, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+            nn.AdaptiveAvgPool2d(1),
+        )
+        # Phase 2: combined (2 channels)
+        self.conv_combined = nn.Sequential(
+            nn.Conv2d(2, 64, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
             nn.AdaptiveAvgPool2d(1),
         )
         self.fc = nn.Linear(64, num_classes)
     
-    def forward(self, lung_mask, inf_mask):
+    def forward(self, lung_mask, inf_mask, use_infection=True):
         """
         Args:
             lung_mask: (B, 1, H, W)
             inf_mask: (B, 1, H, W)
+            use_infection: If True, use both masks (Phase 2). If False, use only lung mask (Phase 1).
         Returns:
             logits: (B, num_classes)
         """
-        x = torch.cat([lung_mask, inf_mask], dim=1)  # (B, 2, H, W)
-        x = self.conv(x)  # (B, 64, 1, 1)
+        if use_infection:
+            x = torch.cat([lung_mask, inf_mask], dim=1)  # (B, 2, H, W)
+            x = self.conv_combined(x)  # (B, 64, 1, 1)
+        else:
+            x = self.conv_lung(lung_mask)  # (B, 64, 1, 1)
+        
         x = x.flatten(1)  # (B, 64)
         x = self.fc(x)    # (B, num_classes)
         return x
@@ -96,12 +115,14 @@ class MultiTaskSwinPPM(nn.Module):
         self.infection_head = SegmentationHead(decoder_out_channels, out_channels=1, scale_factor=2)
         
         # Classification Head
-        self.classification_head = ClassificationHead(in_channels=2, num_classes=num_classes)
+        self.classification_head = ClassificationHead(num_classes=num_classes)
     
-    def forward(self, x):
+    def forward(self, x, use_infection=True):
         """
         Args:
             x: Input CXR image (B, 1, H, W)
+            use_infection: If True (Phase 2), use both masks for classification.
+                          If False (Phase 1), use only lung mask for classification.
         
         Returns:
             lung_mask: Lung segmentation mask (B, 1, H, W)
@@ -122,7 +143,7 @@ class MultiTaskSwinPPM(nn.Module):
         infection_mask = self.infection_head(inf_feat)
         
         # Classification from masks
-        class_logits = self.classification_head(lung_mask, infection_mask)
+        class_logits = self.classification_head(lung_mask, infection_mask, use_infection=use_infection)
         
         return lung_mask, infection_mask, class_logits
     
@@ -145,14 +166,19 @@ class MultiTaskSwinPPM(nn.Module):
 
 if __name__ == "__main__":
     # Test complete model
-    model = MultiTaskSwinPPM(in_channels=1, pretrained=False)
+    model = MultiTaskSwinPPM(in_channels=1)
     x = torch.randn(2, 1, 256, 256)
     
-    lung, inf, cls = model(x)
-    
-    print("MultiTaskSwinPPM Test:")
+    # Test Phase 1 mode (lung only for classification)
+    lung, inf, cls = model(x, use_infection=False)
+    print("MultiTaskSwinPPM Test (Phase 1 mode):")
     print(f"  Input: {x.shape}")
     print(f"  Lung mask: {lung.shape}")
     print(f"  Infection mask: {inf.shape}")
+    print(f"  Classification: {cls.shape}")
+    
+    # Test Phase 2 mode (both masks for classification)
+    lung, inf, cls = model(x, use_infection=True)
+    print("\nMultiTaskSwinPPM Test (Phase 2 mode):")
     print(f"  Classification: {cls.shape}")
     print(f"  Total parameters: {model.count_parameters():,}")
