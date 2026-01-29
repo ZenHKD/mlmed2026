@@ -6,8 +6,7 @@
 \usepackage{amsmath}
 
 \title{Practice 2: A Study of Deep Learning for Measurement of The Fetal Head Circumference}
-\author{Hoang Khanh Dong - 22BA13072}
-\date{January 2026}
+\author{Hoang Khanh Dong - 22BA13072 \\ January 2026}
 
 \begin{document}
 
@@ -171,7 +170,32 @@ Figure \ref{fig:reg} shows the scatter plot of predicted versus ground truth hea
 
 \section{Discussion}
 
+The CU-Net model achieved a Dice of 0.9733, IoU of 0.9480, and HC measurement MAE of 2.33 mm ($R^2$ = 0.9962) on the validation set. Since the HC18 challenge no longer accepts submissions, these results cannot be directly compared to the official leaderboard.
+
+For reference, the top methods on the HC18 leaderboard~\footnote{\url{https://hc18.grand-challenge.org/evaluation/challenge/leaderboard/}} are shown in Table~\ref{tab:leaderboard}. The top solutions use nnU-Net and achieve MAE around 0.74 mm---better than my 2.33 mm. This gap may be attributed to differences in evaluation sets, their use of 1000 training epochs (vs. my 100), and nnU-Net's automated optimization pipeline.
+
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.3}
+    \caption{Top 3 Results from HC18 Grand Challenge Leaderboard}
+    \label{tab:leaderboard}
+    \begin{tabular}{|l|c|c|c|}
+        \hline
+        \textbf{Metric} & \textbf{1st (nnU-Net)} & \textbf{2nd (nnU-Net)} & \textbf{3rd (nnU-Net)} \\
+        \hline
+        Created & 8 June 2023 & 6 June 2023 & 10 June 2023 \\
+        \hline
+        \textbf{MAE (mm)} & \textbf{0.74 $\pm$ 0.73} & \textbf{0.74 $\pm$ 0.73} & \textbf{0.81 $\pm$ 1.26} \\
+        MD (mm) & 0.14 $\pm$ 1.03 & 0.14 $\pm$ 1.03 & 0.21 $\pm$ 1.49 \\
+        DICE (\%) & 99.43 $\pm$ 0.63 & 99.43 $\pm$ 0.63 & 99.41 $\pm$ 0.73 \\
+        HD (mm) & 0.39 $\pm$ 0.40 & 0.39 $\pm$ 0.40 & 0.41 $\pm$ 0.56 \\
+        \hline
+    \end{tabular}
+\end{table}
+
 \section{Conclusion}
+
+This study presented a CU-Net-based approach for automated fetal HC measurement, achieving strong validation performance (Dice: 0.9733, MAE: 2.33 mm). While not directly comparable to the HC18 leaderboard. Future work could explore nnU-Net, extended training, and ensemble methods to close the gap with state-of-the-art solutions.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
