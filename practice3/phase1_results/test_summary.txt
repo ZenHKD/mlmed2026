@@ -1,0 +1,28 @@
+Phase 1: Lung Segmentation + Classification Test Results
+============================================================
+
+Model: /home/zendragonxxx/mlmed2026/practice3/phase1_best_model.pth
+Epoch: 49
+Val Dice (at save): 0.9746
+Val Acc (at save): 0.9289274506184235
+
+Segmentation Metrics:
+  Dice: 0.9727
+  IoU:  0.9477
+
+Classification Metrics:
+  Accuracy:  0.9399
+  Precision: 0.9399 (macro)
+  Recall:    0.9383 (macro)
+  F1 Score:  0.9388 (macro)
+
+Per-Class Metrics:
+  Normal: Dice=0.9844, IoU=0.9695, P=0.9463, R=0.8981, F1=0.9216, n=2140
+  Non-COVID: Dice=0.9608, IoU=0.9256, P=0.8983, R=0.9365, F1=0.9170, n=2253
+  COVID-19: Dice=0.9734, IoU=0.9491, P=0.9751, R=0.9804, F1=0.9777, n=2395
+
+Confusion Matrix:
+              Normal    Non-COVID  COVID-19
+  Normal     1922       207        11        
+  Non-COVID  94         2110       49        
+  COVID-19   15         32         2348      

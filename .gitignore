@@ -8,6 +8,10 @@
 /practice3/archive
 /practice3/hybrid_model/__pycache__
 /practice3/plan.md
+/practice3/phase1_best_model.pth
+/practice3/phase1_last_model.pth
+/practice3/phase2_best_model.pth
+/practice3/phase2_last_model.pth
 
 practice1.aux
 practice1.log
@@ -16,6 +20,10 @@ practice1.out
 practice2.aux
 practice2.log
 practice2.out
+
+practice3.aux
+practice3.log
+practice3.out
 
 *.pyc
 *__pycache__*

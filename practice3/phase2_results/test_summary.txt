@@ -1,0 +1,28 @@
+Phase 2: Full Multi-Task Test Results
+============================================================
+
+Model: /home/zendragonxxx/mlmed2026/practice3/phase2_best_model.pth
+Epoch: 10
+
+Segmentation Metrics:
+  Lung Dice:      0.9645
+  Lung IoU:       0.9330
+  Infection Dice: 0.7407
+  Infection IoU:  0.6312
+
+Classification Metrics:
+  Accuracy:  0.9220
+  Precision: 0.9032 (macro)
+  Recall:    0.9028 (macro)
+  F1 Score:  0.9029 (macro)
+
+Per-Class Metrics:
+  Normal: L.Dice=0.9827, I.Dice=0.0001, P=0.8687, R=0.8866, F1=0.8776, n=291
+  Non-COVID: L.Dice=0.9530, I.Dice=0.0000, P=0.8632, R=0.8425, F1=0.8527, n=292
+  COVID-19: L.Dice=0.9612, I.Dice=0.7407, P=0.9777, R=0.9794, F1=0.9786, n=583
+
+Confusion Matrix:
+              Normal    Non-COVID  COVID-19
+  Normal     258        28         5         
+  Non-COVID  38         246        8         
+  COVID-19   1          11         571       

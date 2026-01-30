@@ -5,7 +5,6 @@ import os
 import sys
 import torch
 from torch.utils.data import Dataset, DataLoader
-from torch.cuda.amp import autocast, GradScaler
 import cv2
 import numpy as np
 import pandas as pd
@@ -99,8 +98,8 @@ class LungSegmentationDataset(Dataset):
         return img, mask, label
 
 
-def train_epoch(model, loader, seg_criterion, cls_criterion, optimizer, scaler, device, 
-                 seg_weight=1.0, cls_weight=0.5, use_amp=True):
+def train_epoch(model, loader, seg_criterion, cls_criterion, optimizer, device, 
+                 seg_weight=1.0, cls_weight=0.5):
     """Train for one epoch with lung segmentation + classification."""
     model.train()
     total_loss = 0
@@ -119,21 +118,19 @@ def train_epoch(model, loader, seg_criterion, cls_criterion, optimizer, scaler, 
         
         optimizer.zero_grad()
         
-        with autocast(enabled=use_amp):
-            lung_pred, inf_pred, class_pred = model(images, use_infection=False)
-            
-            # Segmentation loss (lung only)
-            seg_loss = seg_criterion(lung_pred, masks)
-            
-            # Classification loss
-            cls_loss = cls_criterion(class_pred, labels)
-            
-            # Combined loss
-            loss = seg_weight * seg_loss + cls_weight * cls_loss
+        lung_pred, inf_pred, class_pred = model(images, use_infection=False)
         
-        scaler.scale(loss).backward()
-        scaler.step(optimizer)
-        scaler.update()
+        # Segmentation loss (lung only)
+        seg_loss = seg_criterion(lung_pred, masks)
+        
+        # Classification loss
+        cls_loss = cls_criterion(class_pred, labels)
+        
+        # Combined loss
+        loss = seg_weight * seg_loss + cls_weight * cls_loss
+        
+        loss.backward()
+        optimizer.step()
         
         # Metrics
         total_loss += loss.item()
@@ -218,7 +215,6 @@ def main():
     batch_size = 8
     num_epochs = 50
     learning_rate = 1e-4
-    use_amp = True  # Mixed precision training
     
     print("=" * 80)
     print("Phase 1: Lung Segmentation Training")
@@ -288,7 +284,6 @@ def main():
         weight_decay=0.01
     )
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=1e-6)
-    scaler = GradScaler(enabled=use_amp)
     
     # ============== TRAINING LOOP ==============
     best_val_dice = 0.0
@@ -303,7 +298,7 @@ def main():
         # Train
         train_loss, train_seg, train_cls, train_dice, train_iou, train_acc = train_epoch(
             model, train_loader, seg_criterion, cls_criterion, 
-            optimizer, scaler, device, seg_weight, cls_weight, use_amp
+            optimizer, device, seg_weight, cls_weight
         )
         
         # Validate
