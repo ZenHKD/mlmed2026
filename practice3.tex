@@ -220,7 +220,7 @@ The training progress is shown in Figure~\ref{fig:acc1} and the confusion matrix
 \begin{figure*}[t]
     \centering
     \includegraphics[width=0.65\textwidth]{practice3/images/viz1.png}
-    \caption{Phase 1: Qualitative Results showing Lung Segmentation and Classification.}
+    \caption{Phase 1: Qualitative Results showing Lung Segmentation.}
     \label{fig:viz1}
 \end{figure*}
 
@@ -267,13 +267,23 @@ Figure~\ref{fig:acc2} shows the training curves for Phase 2, and Figure~\ref{fig
 \begin{figure*}[t]
     \centering
     \includegraphics[width=0.8\textwidth]{practice3/images/viz2.png}
-    \caption{Phase 2: Qualitative Results showing Lung Segmentation, Infection Segmentation, and Classification.}
+    \caption{Phase 2: Qualitative Results showing Lung Segmentation and Infection Segmentation.}
     \label{fig:viz2}
 \end{figure*}
 
 \section{Discussion}
 
+The results demonstrate the effectiveness of the proposed hybrid architecture for multi-task COVID-19 analysis. The separate training phases allowed the model to first learn robust lung features before focusing on the more challenging infection segmentation task.
+
+The lung segmentation performance was consistently high across both phases (Dice $>0.96$), indicating that the model successfully learned the clear anatomical boundaries of the lungs. In contrast, infection segmentation proved more challenging, achieving a Dice score of 0.7407. This is expected given the high variability in the shape, size, and intensity of COVID-19 lesions compared to the relatively stable structure of the lungs (See in Figure~\ref{fig:viz2}).
+
+Remarkably, the classification accuracy remained robust ($>92\%$) throughout both phases. This suggests that the shared encoder learned feature representations that are discriminative for disease classification even when optimizing for pixel-level segmentation tasks.
+
 \section{Conclusion}
+
+This study presented a multi-task deep learning framework combining a Swin Transformer encoder with dual U-Net decoders. Validated on the COVID-QU-Ex dataset, my approach demonstrated strong performance in simultaneously segmenting lungs, delineating infection regions, and classifying COVID-19 cases. 
+
+The successful integration of these three tasks into a single model highlights the potential of multi-task learning for efficient and comprehensive automated diagnosis systems. Future work could focus on improving infection segmentation performance through more advanced attention mechanisms or loss functions tailored for small, irregular lesions.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
