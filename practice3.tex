@@ -153,7 +153,7 @@ The training loss curve for Phase 1 is shown in Figure~\ref{fig:loss1}.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\linewidth]{practice3/images/loss1.png}
+    \includegraphics[width=1\linewidth]{practice3/images/loss1.png}
     \caption{Training and Validation Loss during Phase 1}
     \label{fig:loss1}
 \end{figure}
@@ -170,16 +170,106 @@ The classification weight is reduced to 0.3 as the classifier is already well-tr
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\linewidth]{practice3/images/loss2.png}
+    \includegraphics[width=1\linewidth]{practice3/images/loss2.png}
     \caption{Training and Validation Loss during Phase 2}
     \label{fig:loss2}
 \end{figure}
 
 \section{Results}
+\label{sec:results}
 
 \subsection{Phase 1: Lung Segmentation + Classification}
 
+In the first phase, the model was trained for lung segmentation and disease classification. The model achieved a Dice Score of 0.9727 and an IoU Score of 0.9477 for lung segmentation. For classification, it reached an overall accuracy of 93.99\%.
+
+The per-class performance is detailed in Table~\ref{tab:phase1_results}. The model showed robust performance across all three classes, with the highest sensitivity for COVID-19 cases (Recall: 0.9804).
+
+\begin{table}[H]
+    \centering
+    \caption{Phase 1 Test Results (Per-Class)}
+    \label{tab:phase1_results}
+    \resizebox{\columnwidth}{!}{%
+    \begin{tabular}{|l|c|c|c|c|c|c|}
+        \hline
+        \textbf{Class} & \textbf{Count} & \textbf{Dice} & \textbf{IoU} & \textbf{Acc} & \textbf{Precision} & \textbf{Recall} \\
+        \hline
+        Normal & 2140 & 0.9844 & 0.9695 & 0.8981 & 0.9463 & 0.8981 \\
+        Non-COVID & 2253 & 0.9608 & 0.9256 & 0.9365 & 0.8983 & 0.9365 \\
+        COVID-19 & 2395 & 0.9734 & 0.9491 & 0.9804 & 0.9751 & 0.9804 \\
+        \hline
+    \end{tabular}%
+    }
+\end{table}
+
+The training progress is shown in Figure~\ref{fig:acc1} and the confusion matrix in Figure~\ref{fig:cm1}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{practice3/images/acc1.png}
+    \caption{Phase 1: Training Accuracy and Loss}
+    \label{fig:acc1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{practice3/images/cm1.png}
+    \caption{Phase 1: Confusion Matrix}
+    \label{fig:cm1}
+\end{figure}
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.65\textwidth]{practice3/images/viz1.png}
+    \caption{Phase 1: Qualitative Results showing Lung Segmentation and Classification.}
+    \label{fig:viz1}
+\end{figure*}
+
+
 \subsection{Phase 2: All of phase 1 + Infection Segmentation}
+
+In the second phase, the model was fine-tuned to also perform infection segmentation. The model maintained high performance on lung segmentation (Dice: 0.9645) while achieving a Dice Score of 0.7407 for infection segmentation on COVID-19 cases. Classification accuracy remained high at 92.20\%.
+
+Table~\ref{tab:phase2_results} presents the detailed metrics. Note that Infection Dice (I.Dice) is only applicable for COVID-19 and is near zero for Normal/Non-COVID as expected.
+
+\begin{table}[H]
+    \centering
+    \caption{Phase 2 Test Results (Per-Class)}
+    \label{tab:phase2_results}
+    \resizebox{\columnwidth}{!}{%
+    \begin{tabular}{|l|c|c|c|c|c|c|}
+        \hline
+        \textbf{Class} & \textbf{L.Dice} & \textbf{I.Dice} & \textbf{Acc} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} \\
+        \hline
+        Normal & 0.9827 & 0.0001 & 0.8866 & 0.8687 & 0.8866 & 0.8776 \\
+        Non-COVID & 0.9530 & 0.0000 & 0.8425 & 0.8632 & 0.8425 & 0.8527 \\
+        COVID-19 & 0.9612 & 0.7407 & 0.9794 & 0.9777 & 0.9794 & 0.9786 \\
+        \hline
+    \end{tabular}%
+    }
+\end{table}
+
+Figure~\ref{fig:acc2} shows the training curves for Phase 2, and Figure~\ref{fig:cm2} displays the confusion matrix.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{practice3/images/acc2.png}
+    \caption{Phase 2: Training Accuracy and Loss}
+    \label{fig:acc2}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{practice3/images/cm2.png}
+    \caption{Phase 2: Confusion Matrix}
+    \label{fig:cm2}
+\end{figure}
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.8\textwidth]{practice3/images/viz2.png}
+    \caption{Phase 2: Qualitative Results showing Lung Segmentation, Infection Segmentation, and Classification.}
+    \label{fig:viz2}
+\end{figure*}
 
 \section{Discussion}
 
