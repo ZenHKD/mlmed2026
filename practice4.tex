@@ -387,6 +387,104 @@ The pipeline achieves a mean FROC score of $\mathbf{0.731 \pm 0.036}$ across the
 
 \section{Discussion}
 
+Table~\ref{tab:froc_comparison} compares the FROC score of my pipeline against published methods on the LUNA16 benchmark. Note that the published methods use all 10 subsets with full 10-fold cross-validation, whereas my pipeline uses only 5 subsets.
+
+\begin{table}[H]
+\centering
+\caption{Comparison of FROC scores on the LUNA16 dataset.}
+\label{tab:froc_comparison}
+\begin{tabular}{l|c|c|c}
+\hline
+\textbf{Method} & \textbf{Params} & \textbf{FROC} & \textbf{Subsets} \\
+\hline
+3DFPN-HS$^2$ (2019)  & $\sim$28M  & 0.906 & 10 \\
+S4ND (2018)           & $\sim$25M  & 0.897 & 10 \\
+DeepLung (2018)       & $\sim$141M & 0.842 & 10 \\
+3DFCN (2017)          & $\sim$15M  & 0.839 & 10 \\
+\hline
+\textbf{Mine}         & \textbf{5.0M}   & \textbf{0.731} & \textbf{5} \\
+\hline
+\end{tabular}
+\end{table}
+
+My pipeline achieves a FROC score of 0.731, which is lower than state-of-the-art methods. Several factors contribute to this gap: (1)~I train on only 5 of the 10 available subsets, reducing training data by half; (2)~the candidate generation relies on the external \texttt{candidates\_V2.csv} file rather than a learned region proposal network; and (3)~the 3D ResNet-18 classifier (3.60\,M) is relatively lightweight compared to deeper architectures used by top methods. Nevertheless, the pipeline demonstrates a sound two-stage approach and achieves high sensitivity ($>$89\%) at $\geq$2 FP/scan, suggesting that the classifier is effective but would benefit from better false positive reduction at lower operating points.
+
 \section{Conclusion}
+This practice implemented a two-stage deep learning pipeline for pulmonary nodule detection on the LUNA16 dataset using only 5 of the 10 available subsets. Stage 1 employed a 3D U-Net (1.40\,M parameters) for lung segmentation, achieving a mean Dice coefficient of 0.924. Stage 2 used a 3D ResNet-18 (3.60\,M parameters) to classify nodule candidates, achieving a mean AUC-ROC of 0.980. The overall pipeline attained a mean FROC score of 0.731 across 5-fold cross-validation. The gap compared to state-of-the-art methods is primarily attributed to hardware limitations: training was restricted to only 5 of the 10 subsets due to limited storage, the number of training epochs was kept small (10 for Stage 1, 30 for Stage 2) to fit within available GPU time, and data augmentation was limited to random 3D flips without more comprehensive strategies such as elastic deformation, intensity jittering, or mixup. With access to more computational resources, training on the full dataset with extended epochs and richer augmentation would likely close this performance gap.
+
+\subsection{Qualitative Results}
+Figures~\ref{fig:seg_vis1}--\ref{fig:seg_vis3} show sample lung segmentation predictions from Stage 1, comparing ground-truth masks (green) with predicted masks (blue) across representative axial slices. Figures~\ref{fig:det_overview1}--\ref{fig:det_nodule31} show sample nodule detection results from Stage 2, with ground-truth nodule boundaries (green circles), true positive predictions (red dots), and false positive predictions (orange dots).
+
+% Stage 1 visualizations (full-width)
+\begin{figure*}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{practice4/images/stage1/scan1_062000744821260.png}
+\caption{Stage 1 segmentation: Scan 1 — GT (top) vs Prediction (bottom).}
+\label{fig:seg_vis1}
+\end{figure*}
+
+\begin{figure*}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{practice4/images/stage1/scan2_896160048741492.png}
+\caption{Stage 1 segmentation: Scan 2 — GT (top) vs Prediction (bottom).}
+\label{fig:seg_vis2}
+\end{figure*}
+
+\begin{figure*}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{practice4/images/stage1/scan3_225658609808059.png}
+\caption{Stage 1 segmentation: Scan 3 — GT (top) vs Prediction (bottom).}
+\label{fig:seg_vis3}
+\end{figure*}
+
+% Stage 2 visualizations (full-width)
+\begin{figure*}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{practice4/images/stage2/scan1_896160048741492_overview.png}
+\caption{Stage 2 detection overview: Scan 1 — top predictions across slices.}
+\label{fig:det_overview1}
+\end{figure*}
+
+\begin{figure*}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{practice4/images/stage2/scan1_896160048741492_nodule1.png}
+\caption{Stage 2 detection: Scan 1, Nodule 1 close-up.}
+\label{fig:det_nodule11}
+\end{figure*}
+
+\begin{figure*}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{practice4/images/stage2/scan2_225658609808059_overview.png}
+\caption{Stage 2 detection overview: Scan 2 — top predictions across slices.}
+\label{fig:det_overview2}
+\end{figure*}
+
+\begin{figure*}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{practice4/images/stage2/scan2_225658609808059_nodule1.png}
+\caption{Stage 2 detection: Scan 2, Nodule 1 close-up.}
+\label{fig:det_nodule21}
+\end{figure*}
+
+\begin{figure*}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{practice4/images/stage2/scan2_225658609808059_nodule2.png}
+\caption{Stage 2 detection: Scan 2, Nodule 2 close-up.}
+\label{fig:det_nodule22}
+\end{figure*}
+
+\begin{figure*}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{practice4/images/stage2/scan3_221381920536987_overview.png}
+\caption{Stage 2 detection overview: Scan 3 — top predictions across slices.}
+\label{fig:det_overview3}
+\end{figure*}
+
+\begin{figure*}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{practice4/images/stage2/scan3_221381920536987_nodule1.png}
+\caption{Stage 2 detection: Scan 3, Nodule 1 close-up.}
+\label{fig:det_nodule31}
+\end{figure*}
 
 \end{document}
