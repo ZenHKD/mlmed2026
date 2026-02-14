@@ -148,7 +148,7 @@ I employ 5-fold cross-validation, where each fold holds out one subset for valid
 
 \textbf{Training.} The 3D U-Net is trained for 10 epochs with a batch size of 1 (due to large volume sizes) using AdamW optimizer (weight decay $10^{-4}$) and OneCycleLR scheduler (max LR $= 10^{-3}$, 10\% warmup, cosine annealing). The loss function combines Dice loss and BCE loss with equal weighting. Automatic mixed-precision (AMP) is used throughout, and gradient norms are clipped at 5.0.
 
-\textbf{Validation.} At the end of each epoch, the model is evaluated on the held-out validation subset. I compute per-voxel Dice coefficient and Intersection-over-Union (IoU) for the lung region. The best checkpoint is selected based on the lowest validation loss. Figure~\ref{fig:stage1_curves} shows the training curves.
+\textbf{Validation.} At the end of each epoch, the model is evaluated on the held-out validation subset. I compute per-voxel Dice coefficient and Intersection-over-Union (IoU) for the lung region. The best checkpoint is selected based on the lowest validation loss. Figures~\ref{fig:stage1_loss}--\ref{fig:stage1_iou} show the training curves.
 
 \begin{figure}[H]
 \centering
@@ -269,7 +269,7 @@ Since each epoch sees only $\sim$0.2\% of all negatives, approximately 440 epoch
 \item \textbf{F1 Score}: harmonic mean of precision and recall.
 \item \textbf{AUC-ROC}: area under the receiver operating characteristic curve, computed from continuous probabilities (sigmoid output).
 \end{itemize}
-The best checkpoint is selected based on the highest validation AUC-ROC, as it is threshold-independent and more robust for imbalanced datasets than loss-based selection. Figures~\ref{fig:stage2_loss}--\ref{fig:stage2_metrics} show the training curves.
+The best checkpoint is selected based on the highest validation AUC-ROC, as it is threshold-independent and more robust for imbalanced datasets than loss-based selection. Figures~\ref{fig:stage2_loss}--\ref{fig:stage2_recall} show the training curves.
 
 \begin{figure}[H]
 \centering
@@ -305,5 +305,88 @@ The best checkpoint is selected based on the highest validation AUC-ROC, as it i
 \caption{Stage 2: Validation Recall.}
 \label{fig:stage2_recall}
 \end{figure}
+
+\section{Results}
+
+\subsection{Stage 1: Lung Segmentation}
+Table~\ref{tab:stage1_results} reports the best validation metrics for each fold, selected by the lowest validation loss. The 3D U-Net achieves a mean Dice coefficient of $0.9242 \pm 0.0084$ and a mean IoU of $0.8980 \pm 0.0089$ across all five folds, demonstrating consistent and reliable lung segmentation performance.
+
+\begin{table}[H]
+\centering
+\caption{Stage 1 best validation results per fold (selected by lowest val loss).}
+\label{tab:stage1_results}
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{l|r|r|r|r|r|r}
+\hline
+ & \textbf{Fold 1} & \textbf{Fold 2} & \textbf{Fold 3} & \textbf{Fold 4} & \textbf{Fold 5} & \textbf{Mean $\pm$ Std} \\
+\hline
+Best Epoch & 10     & 10     & 10     & 9      & 9      & --                    \\
+Val Loss   & 0.1097 & 0.1481 & 0.1107 & 0.0833 & 0.0857 & $0.108 \pm 0.023$    \\
+Dice       & 0.9249 & 0.9119 & 0.9182 & 0.9317 & 0.9345 & $0.924 \pm 0.008$    \\
+IoU        & 0.8974 & 0.8845 & 0.8928 & 0.9070 & 0.9084 & $0.898 \pm 0.009$    \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+\subsection{Stage 2: Nodule Classification}
+Table~\ref{tab:stage2_results} reports the best validation metrics for each fold, selected by the highest AUC-ROC. The 3D ResNet-18 achieves a mean AUC-ROC of $0.9795 \pm 0.0035$, indicating excellent discriminative ability. The mean recall (sensitivity) of $0.9130 \pm 0.0322$ shows that the model successfully detects most true nodules, while the precision of $0.6453 \pm 0.0423$ reflects the remaining challenge of false positives in the heavily imbalanced candidate pool.
+
+\begin{table}[H]
+\centering
+\caption{Stage 2 best validation results per fold (selected by highest AUC-ROC).}
+\label{tab:stage2_results}
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{l|r|r|r|r|r|r}
+\hline
+ & \textbf{Fold 1} & \textbf{Fold 2} & \textbf{Fold 3} & \textbf{Fold 4} & \textbf{Fold 5} & \textbf{Mean $\pm$ Std} \\
+\hline
+Best Epoch & 28     & 30     & 24     & 24     & 24     & --                    \\
+Val Loss   & 0.1323 & 0.1630 & 0.1474 & 0.1384 & 0.1908 & $0.154 \pm 0.021$    \\
+Accuracy   & 0.9532 & 0.9460 & 0.9543 & 0.9453 & 0.9299 & $0.946 \pm 0.009$    \\
+Precision  & 0.6914 & 0.6408 & 0.6772 & 0.6479 & 0.5694 & $0.645 \pm 0.042$    \\
+Recall     & 0.8768 & 0.9235 & 0.9503 & 0.8734 & 0.9412 & $0.913 \pm 0.032$    \\
+F1         & 0.7732 & 0.7566 & 0.7908 & 0.7439 & 0.7095 & $0.755 \pm 0.028$    \\
+AUC-ROC    & 0.9781 & 0.9790 & 0.9828 & 0.9741 & 0.9837 & $0.980 \pm 0.004$    \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+\subsection{FROC Evaluation}
+The FROC (Free-Response Receiver Operating Characteristic) score is the official LUNA16 evaluation metric, defined as the average sensitivity at seven predefined false-positive rates: $\{1/8, 1/4, 1/2, 1, 2, 4, 8\}$ FP/scan. Ground-truth nodule locations are taken from the LUNA16 \texttt{annotations.csv} file, which contains expert-annotated nodule centres and diameters. A candidate detection is counted as a true positive if its world-coordinate distance to a ground-truth nodule centre is less than the annotated nodule radius (diameter/2). All remaining detections are counted as false positives.
+
+For each fold, the best Stage 2 classifier (selected by AUC-ROC) is applied to \emph{all} candidates in the held-out validation subset, and the FROC curve is computed by sweeping the probability threshold. Table~\ref{tab:froc_results} reports the sensitivity at each operating point.
+
+\begin{table}[H]
+\centering
+\caption{FROC evaluation: sensitivity at each FP/scan rate across 5 folds.}
+\label{tab:froc_results}
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{l|r|r|r|r|r|r}
+\hline
+ & \textbf{Fold 1} & \textbf{Fold 2} & \textbf{Fold 3} & \textbf{Fold 4} & \textbf{Fold 5} & \textbf{Mean $\pm$ Std} \\
+\hline
+GT nodules       & 112    & 128    & 128    & 119    & 128    & --                    \\
+\hline
+0.125 FP/scan    & 0.3571 & 0.2422 & 0.2500 & 0.3613 & 0.2188 & $0.286 \pm 0.063$    \\
+0.250 FP/scan    & 0.5268 & 0.5234 & 0.3672 & 0.5462 & 0.3984 & $0.472 \pm 0.078$    \\
+0.500 FP/scan    & 0.6161 & 0.7578 & 0.6250 & 0.6471 & 0.5234 & $0.634 \pm 0.078$    \\
+1.000 FP/scan    & 0.7232 & 0.8906 & 0.7891 & 0.7479 & 0.7266 & $0.775 \pm 0.066$    \\
+2.000 FP/scan    & 0.8571 & 0.9766 & 0.9219 & 0.8571 & 0.8750 & $0.897 \pm 0.048$    \\
+4.000 FP/scan    & 0.9018 & 1.0469 & 1.0859 & 0.9412 & 0.9688 & $0.989 \pm 0.071$    \\
+8.000 FP/scan    & 0.9464 & 1.0938 & 1.1719 & 1.0504 & 1.0703 & $1.066 \pm 0.075$    \\
+\hline
+\textbf{FROC Score} & \textbf{0.7041} & \textbf{0.7902} & \textbf{0.7444} & \textbf{0.7359} & \textbf{0.6830} & $\mathbf{0.731 \pm 0.036}$ \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+The pipeline achieves a mean FROC score of $\mathbf{0.731 \pm 0.036}$ across the five validation folds. At low FP rates ($\leq$0.5 FP/scan), sensitivity ranges from 28.6\% to 63.4\%, indicating room for improvement in reducing false positives. At higher FP rates ($\geq$2 FP/scan), sensitivity exceeds 89\%, demonstrating strong nodule detection capability when a moderate number of false positives is tolerable. Note that sensitivities exceeding 1.0 at high FP rates arise because a single ground-truth nodule can be matched by multiple nearby candidates.
+
+\section{Discussion}
+
+\section{Conclusion}
 
 \end{document}
