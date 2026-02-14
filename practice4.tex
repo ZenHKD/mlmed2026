@@ -1,0 +1,32 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+
+\title{Practice 4: A Study of Segmentation and Classification of 3D Lung CT Images in LUNA16 Dataset}
+\author{Hoang Khanh Dong - 22BA13072 \\ February 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Lung cancer remains the leading cause of cancer-related mortality worldwide, and early detection of pulmonary nodules on computed tomography (CT) scans is critical to improving patient survival. This practice presents a two-stage deep learning pipeline for automated lung nodule detection using the LUNA16 challenge dataset.
+\end{abstract}
+
+\section{Introduction}
+Pulmonary nodules are small, round lesions found in the lungs that may indicate early-stage lung cancer. Detecting these nodules in chest CT scans is a challenging task due to the large volumetric data, diverse nodule morphologies, and the overwhelming number of non-nodule structures that can mimic nodules. 
+
+The LUNA16 (Lung Nodule Analysis 2016) challenge provides a standardized benchmark for evaluating nodule detection algorithms. It consists of 888 CT scans (10 subsets) with expert-annotated nodule locations drawn from the LIDC-IDRI dataset. The primary evaluation metric is the FROC score, defined as the average sensitivity at seven predefined false-positive rates (1/8, 1/4, 1/2, 1, 2, 4, and 8 FP/scan).
+
+This work adopts just \textbf{5 subsets} of the dataset for training and testing, using a two-stage approach:
+\begin{itemize}
+    \item \textbf{Stage 1 — Lung Segmentation:} A lightweight 3D U-Net (4-level encoder-decoder, channels 16--128) segments the lung region from the raw CT volume. 
+    \item \textbf{Stage 2 — Nodule Classification:} A 3D ResNet-18 (channels 32--256) classifies each candidate as a true nodule or false positive. 
+\end{itemize}
+
+\section{Dataset}
+
+
+\end{document}
