@@ -14,7 +14,7 @@
 /practice3/phase2_last_model.pth
 
 /practice4/data
-/practice4/model.md
+/practice4/weights/stage*/fold*/best_model.pth
 
 practice1.aux
 practice1.log
@@ -27,6 +27,10 @@ practice2.out
 practice3.aux
 practice3.log
 practice3.out
+
+practice4.aux
+practice4.log
+practice4.out
 
 *.pyc
 *__pycache__*

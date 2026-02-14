@@ -1,376 +1,173 @@
+"""
+LUNA16 Two-Stage Models:
+  Stage 1: Lightweight 3D U-Net for lung segmentation
+  Stage 2: 3D ResNet-18 for nodule candidate classification
+"""
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
 
-class REBNCONV3d(nn.Module):
-    def __init__(self, in_ch=3, out_ch=3, dirate=1):
-        super(REBNCONV3d, self).__init__()
-        self.conv_s1 = nn.Conv3d(in_ch, out_ch, 3, padding=1 * dirate, dilation=1 * dirate)
-        self.bn_s1 = nn.BatchNorm3d(out_ch)
-        self.relu_s1 = nn.ReLU(inplace=True)
 
+# ============================================================
+#  Stage 1: Lightweight 3D U-Net
+# ============================================================
+
+class ConvBlock3D(nn.Module):
+    """Double convolution block: Conv3d -> GroupNorm -> ReLU x2"""
+    def __init__(self, in_ch, out_ch):
+        super().__init__()
+        # GroupNorm works better than BatchNorm for batch_size=1
+        num_groups = min(8, out_ch)
+        self.block = nn.Sequential(
+            nn.Conv3d(in_ch, out_ch, 3, padding=1, bias=False),
+            nn.GroupNorm(num_groups, out_ch),
+            nn.ReLU(inplace=True),
+            nn.Conv3d(out_ch, out_ch, 3, padding=1, bias=False),
+            nn.GroupNorm(num_groups, out_ch),
+            nn.ReLU(inplace=True),
+        )
+    
     def forward(self, x):
-        return self.relu_s1(self.bn_s1(self.conv_s1(x)))
+        return self.block(x)
 
-def _upsample_like(src, tar):
-    src = F.interpolate(src, size=tar.shape[2:], mode='trilinear', align_corners=True)
-    return src
 
-### RSU Block 3D ###
-class RSU7_3d(nn.Module):
-    def __init__(self, in_ch=3, mid_ch=12, out_ch=3):
-        super(RSU7_3d, self).__init__()
-        self.rebnconvin = REBNCONV3d(in_ch, out_ch, dirate=1)
-        self.rebnconv1 = REBNCONV3d(out_ch, mid_ch, dirate=1)
-        self.rebnconv2 = REBNCONV3d(mid_ch, mid_ch, dirate=1)
-        self.rebnconv3 = REBNCONV3d(mid_ch, mid_ch, dirate=1)
-        self.rebnconv4 = REBNCONV3d(mid_ch, mid_ch, dirate=1)
-        self.rebnconv5 = REBNCONV3d(mid_ch, mid_ch, dirate=1)
-        self.rebnconv6 = REBNCONV3d(mid_ch, mid_ch, dirate=1)
-        self.rebnconv7 = REBNCONV3d(mid_ch, mid_ch, dirate=2)
-
-        self.rebnconv6d = REBNCONV3d(mid_ch * 2, mid_ch, dirate=1)
-        self.rebnconv5d = REBNCONV3d(mid_ch * 2, mid_ch, dirate=1)
-        self.rebnconv4d = REBNCONV3d(mid_ch * 2, mid_ch, dirate=1)
-        self.rebnconv3d = REBNCONV3d(mid_ch * 2, mid_ch, dirate=1)
-        self.rebnconv2d = REBNCONV3d(mid_ch * 2, mid_ch, dirate=1)
-        self.rebnconv1d = REBNCONV3d(mid_ch * 2, out_ch, dirate=1)
-
-        self.pool = nn.MaxPool3d(2, stride=2, ceil_mode=True)
-
-    def forward(self, x):
-        hx = x
-        hxin = self.rebnconvin(hx)
-        hx1 = self.rebnconv1(hxin)
-        hx = self.pool(hx1)
-        hx2 = self.rebnconv2(hx)
-        hx = self.pool(hx2)
-        hx3 = self.rebnconv3(hx)
-        hx = self.pool(hx3)
-        hx4 = self.rebnconv4(hx)
-        hx = self.pool(hx4)
-        hx5 = self.rebnconv5(hx)
-        hx = self.pool(hx5)
-        hx6 = self.rebnconv6(hx)
-        hx7 = self.rebnconv7(hx6)
-
-        hx6d = self.rebnconv6d(torch.cat((hx7, hx6), 1))
-        hx6dup = _upsample_like(hx6d, hx5)
-        hx5d = self.rebnconv5d(torch.cat((hx6dup, hx5), 1))
-        hx5dup = _upsample_like(hx5d, hx4)
-        hx4d = self.rebnconv4d(torch.cat((hx5dup, hx4), 1))
-        hx4dup = _upsample_like(hx4d, hx3)
-        hx3d = self.rebnconv3d(torch.cat((hx4dup, hx3), 1))
-        hx3dup = _upsample_like(hx3d, hx2)
-        hx2d = self.rebnconv2d(torch.cat((hx3dup, hx2), 1))
-        hx2dup = _upsample_like(hx2d, hx1)
-        hx1d = self.rebnconv1d(torch.cat((hx2dup, hx1), 1))
-        return hx1d + hxin
-
-class RSU6_3d(nn.Module):
-    def __init__(self, in_ch=3, mid_ch=12, out_ch=3):
-        super(RSU6_3d, self).__init__()
-        self.rebnconvin = REBNCONV3d(in_ch, out_ch, dirate=1)
-        self.rebnconv1 = REBNCONV3d(out_ch, mid_ch, dirate=1)
-        self.rebnconv2 = REBNCONV3d(mid_ch, mid_ch, dirate=1)
-        self.rebnconv3 = REBNCONV3d(mid_ch, mid_ch, dirate=1)
-        self.rebnconv4 = REBNCONV3d(mid_ch, mid_ch, dirate=1)
-        self.rebnconv5 = REBNCONV3d(mid_ch, mid_ch, dirate=1)
-        self.rebnconv6 = REBNCONV3d(mid_ch, mid_ch, dirate=2)
-
-        self.rebnconv5d = REBNCONV3d(mid_ch * 2, mid_ch, dirate=1)
-        self.rebnconv4d = REBNCONV3d(mid_ch * 2, mid_ch, dirate=1)
-        self.rebnconv3d = REBNCONV3d(mid_ch * 2, mid_ch, dirate=1)
-        self.rebnconv2d = REBNCONV3d(mid_ch * 2, mid_ch, dirate=1)
-        self.rebnconv1d = REBNCONV3d(mid_ch * 2, out_ch, dirate=1)
-
-        self.pool = nn.MaxPool3d(2, stride=2, ceil_mode=True)
-
-    def forward(self, x):
-        hx = x
-        hxin = self.rebnconvin(hx)
-        hx1 = self.rebnconv1(hxin)
-        hx = self.pool(hx1)
-        hx2 = self.rebnconv2(hx)
-        hx = self.pool(hx2)
-        hx3 = self.rebnconv3(hx)
-        hx = self.pool(hx3)
-        hx4 = self.rebnconv4(hx)
-        hx = self.pool(hx4)
-        hx5 = self.rebnconv5(hx)
-        hx6 = self.rebnconv6(hx5)
-
-        hx5d = self.rebnconv5d(torch.cat((hx6, hx5), 1))
-        hx5dup = _upsample_like(hx5d, hx4)
-        hx4d = self.rebnconv4d(torch.cat((hx5dup, hx4), 1))
-        hx4dup = _upsample_like(hx4d, hx3)
-        hx3d = self.rebnconv3d(torch.cat((hx4dup, hx3), 1))
-        hx3dup = _upsample_like(hx3d, hx2)
-        hx2d = self.rebnconv2d(torch.cat((hx3dup, hx2), 1))
-        hx2dup = _upsample_like(hx2d, hx1)
-        hx1d = self.rebnconv1d(torch.cat((hx2dup, hx1), 1))
-        return hx1d + hxin
-
-class RSU5_3d(nn.Module):
-    def __init__(self, in_ch=3, mid_ch=12, out_ch=3):
-        super(RSU5_3d, self).__init__()
-        self.rebnconvin = REBNCONV3d(in_ch, out_ch, dirate=1)
-        self.rebnconv1 = REBNCONV3d(out_ch, mid_ch, dirate=1)
-        self.rebnconv2 = REBNCONV3d(mid_ch, mid_ch, dirate=1)
-        self.rebnconv3 = REBNCONV3d(mid_ch, mid_ch, dirate=1)
-        self.rebnconv4 = REBNCONV3d(mid_ch, mid_ch, dirate=1)
-        self.rebnconv5 = REBNCONV3d(mid_ch, mid_ch, dirate=2)
-
-        self.rebnconv4d = REBNCONV3d(mid_ch * 2, mid_ch, dirate=1)
-        self.rebnconv3d = REBNCONV3d(mid_ch * 2, mid_ch, dirate=1)
-        self.rebnconv2d = REBNCONV3d(mid_ch * 2, mid_ch, dirate=1)
-        self.rebnconv1d = REBNCONV3d(mid_ch * 2, out_ch, dirate=1)
-
-        self.pool = nn.MaxPool3d(2, stride=2, ceil_mode=True)
-
-    def forward(self, x):
-        hx = x
-        hxin = self.rebnconvin(hx)
-        hx1 = self.rebnconv1(hxin)
-        hx = self.pool(hx1)
-        hx2 = self.rebnconv2(hx)
-        hx = self.pool(hx2)
-        hx3 = self.rebnconv3(hx)
-        hx = self.pool(hx3)
-        hx4 = self.rebnconv4(hx)
-        hx5 = self.rebnconv5(hx4)
-
-        hx4d = self.rebnconv4d(torch.cat((hx5, hx4), 1))
-        hx4dup = _upsample_like(hx4d, hx3)
-        hx3d = self.rebnconv3d(torch.cat((hx4dup, hx3), 1))
-        hx3dup = _upsample_like(hx3d, hx2)
-        hx2d = self.rebnconv2d(torch.cat((hx3dup, hx2), 1))
-        hx2dup = _upsample_like(hx2d, hx1)
-        hx1d = self.rebnconv1d(torch.cat((hx2dup, hx1), 1))
-        return hx1d + hxin
-
-class RSU4_3d(nn.Module):
-    def __init__(self, in_ch=3, mid_ch=12, out_ch=3):
-        super(RSU4_3d, self).__init__()
-        self.rebnconvin = REBNCONV3d(in_ch, out_ch, dirate=1)
-        self.rebnconv1 = REBNCONV3d(out_ch, mid_ch, dirate=1)
-        self.rebnconv2 = REBNCONV3d(mid_ch, mid_ch, dirate=1)
-        self.rebnconv3 = REBNCONV3d(mid_ch, mid_ch, dirate=1)
-        self.rebnconv4 = REBNCONV3d(mid_ch, mid_ch, dirate=2)
-
-        self.rebnconv3d = REBNCONV3d(mid_ch * 2, mid_ch, dirate=1)
-        self.rebnconv2d = REBNCONV3d(mid_ch * 2, mid_ch, dirate=1)
-        self.rebnconv1d = REBNCONV3d(mid_ch * 2, out_ch, dirate=1)
-        self.pool = nn.MaxPool3d(2, stride=2, ceil_mode=True)
-
-    def forward(self, x):
-        hx = x
-        hxin = self.rebnconvin(hx)
-        hx1 = self.rebnconv1(hxin)
-        hx = self.pool(hx1)
-        hx2 = self.rebnconv2(hx)
-        hx = self.pool(hx2)
-        hx3 = self.rebnconv3(hx)
-        hx4 = self.rebnconv4(hx3)
-
-        hx3d = self.rebnconv3d(torch.cat((hx4, hx3), 1))
-        hx3dup = _upsample_like(hx3d, hx2)
-        hx2d = self.rebnconv2d(torch.cat((hx3dup, hx2), 1))
-        hx2dup = _upsample_like(hx2d, hx1)
-        hx1d = self.rebnconv1d(torch.cat((hx2dup, hx1), 1))
-        return hx1d + hxin
-
-class RSU4F_3d(nn.Module):
-    def __init__(self, in_ch=3, mid_ch=12, out_ch=3):
-        super(RSU4F_3d, self).__init__()
-        self.rebnconvin = REBNCONV3d(in_ch, out_ch, dirate=1)
-        self.rebnconv1 = REBNCONV3d(out_ch, mid_ch, dirate=1)
-        self.rebnconv2 = REBNCONV3d(mid_ch, mid_ch, dirate=2)
-        self.rebnconv3 = REBNCONV3d(mid_ch, mid_ch, dirate=4)
-        self.rebnconv4 = REBNCONV3d(mid_ch, mid_ch, dirate=8)
-
-        self.rebnconv3d = REBNCONV3d(mid_ch * 2, mid_ch, dirate=4)
-        self.rebnconv2d = REBNCONV3d(mid_ch * 2, mid_ch, dirate=2)
-        self.rebnconv1d = REBNCONV3d(mid_ch * 2, out_ch, dirate=1)
-
-    def forward(self, x):
-        hxin = self.rebnconvin(x)
-        hx1 = self.rebnconv1(hxin)
-        hx2 = self.rebnconv2(hx1)
-        hx3 = self.rebnconv3(hx2)
-        hx4 = self.rebnconv4(hx3)
-
-        hx3d = self.rebnconv3d(torch.cat((hx4, hx3), 1))
-        hx2d = self.rebnconv2d(torch.cat((hx3d, hx2), 1))
-        hx1d = self.rebnconv1d(torch.cat((hx2d, hx1), 1))
-        return hx1d + hxin
-
-class RegressionHead(nn.Module):
-    def __init__(self, in_features, num_anchors=9, feature_size=256):
-        super(RegressionHead, self).__init__()
-        self.conv1 = nn.Conv3d(in_features, feature_size, kernel_size=3, padding=1)
-        self.act1 = nn.ReLU()
-        self.conv2 = nn.Conv3d(feature_size, feature_size, kernel_size=3, padding=1)
-        self.act2 = nn.ReLU()
-        self.conv3 = nn.Conv3d(feature_size, feature_size, kernel_size=3, padding=1)
-        self.act3 = nn.ReLU()
-        self.conv4 = nn.Conv3d(feature_size, feature_size, kernel_size=3, padding=1)
-        self.act4 = nn.ReLU()
-        
-        # 6 coordinates for 3D box: [x, y, z, w, h, d]
-        self.output = nn.Conv3d(feature_size, num_anchors * 6, kernel_size=3, padding=1)
-
-    def forward(self, x):
-        out = self.conv1(x)
-        out = self.act1(out)
-        out = self.conv2(out)
-        out = self.act2(out)
-        out = self.conv3(out)
-        out = self.act3(out)
-        out = self.conv4(out)
-        out = self.act4(out)
-        out = self.output(out)
-        return out
-
-class ClassificationHead(nn.Module):
-    def __init__(self, in_features, num_anchors=9, num_classes=1, feature_size=256):
-        super(ClassificationHead, self).__init__()
-        self.conv1 = nn.Conv3d(in_features, feature_size, kernel_size=3, padding=1)
-        self.act1 = nn.ReLU()
-        self.conv2 = nn.Conv3d(feature_size, feature_size, kernel_size=3, padding=1)
-        self.act2 = nn.ReLU()
-        self.conv3 = nn.Conv3d(feature_size, feature_size, kernel_size=3, padding=1)
-        self.act3 = nn.ReLU()
-        self.conv4 = nn.Conv3d(feature_size, feature_size, kernel_size=3, padding=1)
-        self.act4 = nn.ReLU()
-        self.output = nn.Conv3d(feature_size, num_anchors * num_classes, kernel_size=3, padding=1)
-        self.output_act = nn.Sigmoid()
-
-    def forward(self, x):
-        out = self.conv1(x)
-        out = self.act1(out)
-        out = self.conv2(out)
-        out = self.act2(out)
-        out = self.conv3(out)
-        out = self.act3(out)
-        out = self.conv4(out)
-        out = self.act4(out)
-        out = self.output(out)
-        out = self.output_act(out)
-        return out
-
-class RetinaU2NET3d(nn.Module):
-    def __init__(self, in_ch=1, out_ch=1, num_classes=1, num_anchors=1):
-        super(RetinaU2NET3d, self).__init__()
-        # Encoder
-        self.stage1 = RSU7_3d(in_ch, 16, 64)
-        self.pool12 = nn.MaxPool3d(2, stride=2, ceil_mode=True)
-
-        self.stage2 = RSU6_3d(64, 16, 64)
-        self.pool23 = nn.MaxPool3d(2, stride=2, ceil_mode=True)
-
-        self.stage3 = RSU5_3d(64, 16, 64)
-        self.pool34 = nn.MaxPool3d(2, stride=2, ceil_mode=True)
-
-        self.stage4 = RSU4_3d(64, 16, 64)
-        self.pool45 = nn.MaxPool3d(2, stride=2, ceil_mode=True)
-
-        self.stage5 = RSU4F_3d(64, 16, 64)
-        self.pool56 = nn.MaxPool3d(2, stride=2, ceil_mode=True)
-
-        self.stage6 = RSU4F_3d(64, 16, 64)
-
-        # Decoder
-        self.stage5d = RSU4F_3d(128, 16, 64)
-        self.stage4d = RSU4_3d(128, 16, 64)
-        self.stage3d = RSU5_3d(128, 16, 64)
-        self.stage2d = RSU6_3d(128, 16, 64)
-        self.stage1d = RSU7_3d(128, 16, 64)
-
-        self.side1 = nn.Conv3d(64, out_ch, 3, padding=1)
-        self.side2 = nn.Conv3d(64, out_ch, 3, padding=1)
-        self.side3 = nn.Conv3d(64, out_ch, 3, padding=1)
-        self.side4 = nn.Conv3d(64, out_ch, 3, padding=1)
-        self.side5 = nn.Conv3d(64, out_ch, 3, padding=1)
-        self.side6 = nn.Conv3d(64, out_ch, 3, padding=1)
-
-        self.outconv = nn.Conv3d(6, out_ch, 1) # fusion
-
-        # Retina Heads - Attach them to Decoder stages (Feature Pyramid)
-        # Stages 3, 4, 5, 6
-        self.regression_head = RegressionHead(in_features=64, num_anchors=num_anchors, feature_size=64)
-        self.classification_head = ClassificationHead(in_features=64, num_anchors=num_anchors, num_classes=num_classes, feature_size=64)
-
-    def forward(self, x):
-        hx = x
+class UNet3D(nn.Module):
+    """Lightweight 3D U-Net for lung segmentation.
+    
+    4-level encoder-decoder with skip connections.
+    Channels: 16 -> 32 -> 64 -> 128
+    """
+    def __init__(self, in_ch=1, out_ch=1):
+        super().__init__()
         
         # Encoder
-        hx1 = self.stage1(hx)
-        hx = self.pool12(hx1)
-
-        hx2 = self.stage2(hx)
-        hx = self.pool23(hx2)
-
-        hx3 = self.stage3(hx)
-        hx = self.pool34(hx3)
-
-        hx4 = self.stage4(hx)
-        hx = self.pool45(hx4)
-
-        hx5 = self.stage5(hx)
-        hx = self.pool56(hx5)
-
-        hx6 = self.stage6(hx)
+        self.enc1 = ConvBlock3D(in_ch, 16)
+        self.enc2 = ConvBlock3D(16, 32)
+        self.enc3 = ConvBlock3D(32, 64)
+        self.enc4 = ConvBlock3D(64, 128)  # Bottleneck
+        
+        self.pool = nn.MaxPool3d(2, stride=2)
         
         # Decoder
-        hx6up = _upsample_like(hx6, hx5)
-        hx5d = self.stage5d(torch.cat((hx6up, hx5), 1))
+        self.up3 = nn.ConvTranspose3d(128, 64, 2, stride=2)
+        self.dec3 = ConvBlock3D(128, 64)  # 64 (up) + 64 (skip)
         
-        hx5dup = _upsample_like(hx5d, hx4)
-        hx4d = self.stage4d(torch.cat((hx5dup, hx4), 1))
+        self.up2 = nn.ConvTranspose3d(64, 32, 2, stride=2)
+        self.dec2 = ConvBlock3D(64, 32)   # 32 (up) + 32 (skip)
         
-        hx4dup = _upsample_like(hx4d, hx3)
-        hx3d = self.stage3d(torch.cat((hx4dup, hx3), 1))
+        self.up1 = nn.ConvTranspose3d(32, 16, 2, stride=2)
+        self.dec1 = ConvBlock3D(32, 16)   # 16 (up) + 16 (skip)
         
-        hx3dup = _upsample_like(hx3d, hx2)
-        hx2d = self.stage2d(torch.cat((hx3dup, hx2), 1))
+        # Output
+        self.out_conv = nn.Conv3d(16, out_ch, 1)
+    
+    def forward(self, x):
+        # Encoder
+        e1 = self.enc1(x)         # (B, 32, D, H, W)
+        e2 = self.enc2(self.pool(e1))  # (B, 64, D/2, H/2, W/2)
+        e3 = self.enc3(self.pool(e2))  # (B, 128, D/4, H/4, W/4)
+        e4 = self.enc4(self.pool(e3))  # (B, 256, D/8, H/8, W/8)
         
-        hx2dup = _upsample_like(hx2d, hx1)
-        hx1d = self.stage1d(torch.cat((hx2dup, hx1), 1))
+        # Decoder with skip connections
+        d3 = self.up3(e4)
+        # Handle odd spatial dimensions
+        if d3.shape != e3.shape:
+            d3 = F.interpolate(d3, size=e3.shape[2:], mode='trilinear', align_corners=True)
+        d3 = self.dec3(torch.cat([d3, e3], dim=1))
+        
+        d2 = self.up2(d3)
+        if d2.shape != e2.shape:
+            d2 = F.interpolate(d2, size=e2.shape[2:], mode='trilinear', align_corners=True)
+        d2 = self.dec2(torch.cat([d2, e2], dim=1))
+        
+        d1 = self.up1(d2)
+        if d1.shape != e1.shape:
+            d1 = F.interpolate(d1, size=e1.shape[2:], mode='trilinear', align_corners=True)
+        d1 = self.dec1(torch.cat([d1, e1], dim=1))
+        
+        return self.out_conv(d1)  # (B, 1, D, H, W) — logits
 
-        # Side Outputs (Segmentation Maps)
-        d1 = self.side1(hx1d)
-        d2 = self.side2(hx2d)
-        d3 = self.side3(hx3d)
-        d4 = self.side4(hx4d)
-        d5 = self.side5(hx5d)
-        d6 = self.side6(hx6)
 
-        d2 = _upsample_like(d2, d1)
-        d3 = _upsample_like(d3, d1)
-        d4 = _upsample_like(d4, d1)
-        d5 = _upsample_like(d5, d1)
-        d6 = _upsample_like(d6, d1)
+# ============================================================
+#  Stage 2: 3D ResNet-18 Classifier
+# ============================================================
 
-        d0 = self.outconv(torch.cat((d1, d2, d3, d4, d5, d6), 1))
-        
-        # Retina Detection Heads (Class + BBox)
-        # Applied to multi-scale features: hx3d, hx4d, hx5d, hx6 (Deepest)
-        # Similar to FPN levels P3, P4, P5, P6
-        
-        features = [hx3d, hx4d, hx5d, hx6]
-        
-        cls_preds = []
-        reg_preds = []
-        
-        for feature in features:
-            cls_preds.append(self.classification_head(feature))
-            reg_preds.append(self.regression_head(feature))
+class BasicBlock3D(nn.Module):
+    """ResNet BasicBlock adapted for 3D."""
+    expansion = 1
+    
+    def __init__(self, in_ch, out_ch, stride=1, downsample=None):
+        super().__init__()
+        num_groups = min(8, out_ch)
+        self.conv1 = nn.Conv3d(in_ch, out_ch, 3, stride=stride, padding=1, bias=False)
+        self.gn1 = nn.GroupNorm(num_groups, out_ch)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv3d(out_ch, out_ch, 3, padding=1, bias=False)
+        self.gn2 = nn.GroupNorm(num_groups, out_ch)
+        self.downsample = downsample
+    
+    def forward(self, x):
+        identity = x
+        out = self.relu(self.gn1(self.conv1(x)))
+        out = self.gn2(self.conv2(out))
+        if self.downsample is not None:
+            identity = self.downsample(x)
+        out += identity
+        return self.relu(out)
 
-        # Returns: 
-        #   masks: list of probability maps [d0, d1, d2, d3, d4, d5, d6] (d0 is fused)
-        #   cls: list of classification maps
-        #   bbox: list of regression maps
+
+class ResNet3D18(nn.Module):
+    """Lightweight 3D ResNet-18 for nodule candidate classification.
+    
+    Input: (B, 1, 32, 32, 32) isotropic patch
+    Output: (B, 1) nodule probability logit
+    Uses narrower channels (32-64-128-256) for ~4M parameters
+    """
+    def __init__(self, in_ch=1, num_classes=1):
+        super().__init__()
         
-        return [d0, d1, d2, d3, d4, d5, d6], cls_preds, reg_preds
+        # Stem (narrower: 32 channels instead of 64)
+        self.stem = nn.Sequential(
+            nn.Conv3d(in_ch, 32, 7, stride=2, padding=3, bias=False),
+            nn.GroupNorm(8, 32),
+            nn.ReLU(inplace=True),
+            nn.MaxPool3d(3, stride=2, padding=1),
+        )
+        
+        # ResNet layers with narrow channels (1 block each for speed)
+        self.layer1 = self._make_layer(32, 32, blocks=1, stride=1)
+        self.layer2 = self._make_layer(32, 64, blocks=1, stride=2)
+        self.layer3 = self._make_layer(64, 128, blocks=1, stride=2)
+        self.layer4 = self._make_layer(128, 256, blocks=1, stride=2)
+        
+        # Classifier
+        self.avgpool = nn.AdaptiveAvgPool3d(1)
+        self.dropout = nn.Dropout(0.3)
+        self.fc = nn.Linear(256, num_classes)
+    
+    def _make_layer(self, in_ch, out_ch, blocks, stride):
+        downsample = None
+        if stride != 1 or in_ch != out_ch:
+            num_groups = min(8, out_ch)
+            downsample = nn.Sequential(
+                nn.Conv3d(in_ch, out_ch, 1, stride=stride, bias=False),
+                nn.GroupNorm(num_groups, out_ch),
+            )
+        
+        layers = [BasicBlock3D(in_ch, out_ch, stride, downsample)]
+        for _ in range(1, blocks):
+            layers.append(BasicBlock3D(out_ch, out_ch))
+        return nn.Sequential(*layers)
+    
+    def forward(self, x):
+        x = self.stem(x)       # (B, 32, 8, 8, 8)
+        x = self.layer1(x)     # (B, 32, 8, 8, 8)
+        x = self.layer2(x)     # (B, 64, 4, 4, 4)
+        x = self.layer3(x)     # (B, 128, 2, 2, 2)
+        x = self.layer4(x)     # (B, 256, 1, 1, 1)
+        x = self.avgpool(x)    # (B, 256, 1, 1, 1)
+        x = x.flatten(1)       # (B, 256)
+        x = self.dropout(x)
+        x = self.fc(x)         # (B, 1)
+        return x

@@ -1,0 +1,10 @@
+Stage 2: Candidate Classification
+Fold 4/5
+Train: subsets [0, 1, 2, 4]
+Val:   subsets [3]
+CandidateDataset: 301188 candidates (659 positive, 300529 negative) from 356 scans
+CandidateDataset: 75950 candidates (158 positive, 75792 negative) from 89 scans
+Training: 659 pos, 300529 neg total
+Per epoch: 659 pos + 659 neg = 1318 samples
+~456 epochs to see all negatives
+Validation: 1738 samples

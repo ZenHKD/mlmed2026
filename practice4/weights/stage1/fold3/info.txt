@@ -1,0 +1,6 @@
+Stage 1: Lung Segmentation
+Fold 3/5
+Train subsets: [0, 1, 3, 4] (1927 chunks)
+Val subsets:   [2] (478 chunks)
+Epochs: 10, LR: 0.001
+Crop size: 64, Spacing: 1.0mm

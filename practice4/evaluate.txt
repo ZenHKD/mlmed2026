@@ -1,0 +1,186 @@
+############################################################                                                                            
+  FOLD 1/5 — Evaluating on subset 0                                                                                                     
+############################################################                                                                            
+Device: cuda                                                                                                                            
+Loaded model from practice4/weights/stage2/fold1/best_model.pth                                                                         
+  Val metrics: {'accuracy': 0.953227931488801, 'precision': 0.6914285714285714, 'recall': 0.8768115942028986, 'f1': 0.7731629392971247, 
+'auc_roc': 0.9780823356437723, 'n_pos': 138, 'n_neg': 1380}                                                                             
+Annotations: 1186 nodules in 601 scans                                                                                                  
+Evaluating 89 scans from subsets [0]                                                                                                    
+Candidates to classify: 79135                                                                                                           
+Ground truth nodules: 112                                                                                                               
+Evaluating: 100%|████████████████████████████████████| 89/89 [04:53<00:00,  3.30s/it]                                                   
+                                                                                                                                        
+============================================================                                                                            
+  FROC EVALUATION RESULTS                                                                                                               
+============================================================                                                                            
+Scans evaluated:    89                                                                                                                  
+Ground truth nodules: 112                                                                                                               
+True positives:     138                                                                                                                 
+False positives:    78997                                                                                                               
+                                                                                                                                        
+Sensitivity at FP/scan rates:                                                                                                           
+  0.125 FP/scan: 0.3571                                                                                                                 
+  0.250 FP/scan: 0.5268                                                                                                                 
+  0.500 FP/scan: 0.6161                                                                                                                 
+  1.000 FP/scan: 0.7232                                                                                                                 
+  2.000 FP/scan: 0.8571                                                                                                                 
+  4.000 FP/scan: 0.9018                                                                                                                 
+  8.000 FP/scan: 0.9464                                                                                                                 
+                                                                                                                                        
+  FROC Score: 0.7041                                                                                                                    
+============================================================       
+                                                                                                                      02:39:13 [114/604]
+Detections saved to practice4/weights/stage2/fold1/detections.csv                                                                       
+
+############################################################                                                                            
+  FOLD 2/5 — Evaluating on subset 1                                 
+############################################################                                                                            
+Device: cuda                      
+Loaded model from practice4/weights/stage2/fold2/best_model.pth                                                                         
+  Val metrics: {'accuracy': 0.9459893048128343, 'precision': 0.6408163265306123, 'recall': 0.9235294117647059, 'f1': 0.7566265060240964,
+ 'auc_roc': 0.9790259515570934, 'n_pos': 170, 'n_neg': 1700}
+Annotations: 1186 nodules in 601 scans                              
+Evaluating 89 scans from subsets [1]                                
+Candidates to classify: 71012                                       
+Ground truth nodules: 128                                           
+Evaluating: 100%|████████████████████████████████████| 89/89 [04:43<00:00,  3.19s/it]                                                   
+
+============================================================                                                                            
+  FROC EVALUATION RESULTS                                           
+============================================================                                                                            
+Scans evaluated:    89                                              
+Ground truth nodules: 128                                           
+True positives:     170                                             
+False positives:    70842                                           
+
+Sensitivity at FP/scan rates:                                       
+  0.125 FP/scan: 0.2422                                             
+  0.250 FP/scan: 0.5234                                             
+  0.500 FP/scan: 0.7578                                             
+  1.000 FP/scan: 0.8906                                             
+  2.000 FP/scan: 0.9766                                             
+  4.000 FP/scan: 1.0469                                             
+  8.000 FP/scan: 1.0938                                             
+
+  FROC Score: 0.7902              
+============================================================                                                                            
+
+Detections saved to practice4/weights/stage2/fold2/detections.csv                                                                       
+
+############################################################                                                                            
+  FOLD 3/5 — Evaluating on subset 2                                 
+############################################################      
+Device: cuda                      
+Loaded model from practice4/weights/stage2/fold3/best_model.pth                                                                         
+  Val metrics: {'accuracy': 0.9542943244600703, 'precision': 0.6771653543307087, 'recall': 0.9502762430939227, 'f1': 0.7908045977011494,
+ 'auc_roc': 0.9828439302829586, 'n_pos': 181, 'n_neg': 1810}
+Annotations: 1186 nodules in 601 scans                              
+Evaluating 89 scans from subsets [2]                                
+Candidates to classify: 74458                                       
+Ground truth nodules: 128                                           
+Evaluating: 100%|████████████████████████████████████| 89/89 [04:49<00:00,  3.25s/it]                                                   
+
+============================================================                                                                            
+  FROC EVALUATION RESULTS                                           
+============================================================                                                                            
+Scans evaluated:    89                                              
+Ground truth nodules: 128                                           
+True positives:     181                                             
+False positives:    74277                                           
+
+Sensitivity at FP/scan rates:                                       
+  0.125 FP/scan: 0.2500                                             
+  0.250 FP/scan: 0.3672                                             
+  0.500 FP/scan: 0.6250                                             
+  1.000 FP/scan: 0.7891                                             
+  2.000 FP/scan: 0.9219                                             
+  4.000 FP/scan: 1.0859                                             
+  8.000 FP/scan: 1.1719                                             
+
+  FROC Score: 0.7444              
+============================================================                                                                            
+
+Detections saved to practice4/weights/stage2/fold3/detections.csv                                                                       
+
+############################################################                                                                            
+  FOLD 4/5 — Evaluating on subset 3                                 
+############################################################                                                                            
+Device: cuda                      
+Loaded model from practice4/weights/stage2/fold4/best_model.pth                                                                         
+  Val metrics: {'accuracy': 0.9453394706559264, 'precision': 0.647887323943662, 'recall': 0.8734177215189873, 'f1': 0.7439353099730458, 
+'auc_roc': 0.9740926934786092, 'n_pos': 158, 'n_neg': 1580}
+Annotations: 1186 nodules in 601 scans                              
+Evaluating 89 scans from subsets [3]                                
+Candidates to classify: 75950                                       
+Ground truth nodules: 119                                           
+Evaluating: 100%|████████████████████████████████████| 89/89 [04:59<00:00,  3.36s/it]                                                   
+
+============================================================
+  FROC EVALUATION RESULTS
+============================================================
+Scans evaluated:    89
+Ground truth nodules: 119
+True positives:     158
+False positives:    75792
+
+Sensitivity at FP/scan rates:
+  0.125 FP/scan: 0.3613
+  0.250 FP/scan: 0.5462
+  0.500 FP/scan: 0.6471
+  1.000 FP/scan: 0.7479
+  2.000 FP/scan: 0.8571
+  4.000 FP/scan: 0.9412
+  8.000 FP/scan: 1.0504
+
+  FROC Score: 0.7359
+============================================================
+
+Detections saved to practice4/weights/stage2/fold4/detections.csv
+
+############################################################
+  FOLD 5/5 — Evaluating on subset 4
+############################################################
+Device: cuda
+Loaded model from practice4/weights/stage2/fold5/best_model.pth
+  Val metrics: {'accuracy': 0.9299465240641711, 'precision': 0.5693950177935944, 'recall': 0.9411764705882353, 'f1': 0.7095343680709535,
+ 'auc_roc': 0.9836505190311419, 'n_pos': 170, 'n_neg': 1700}
+Annotations: 1186 nodules in 601 scans
+Evaluating 89 scans from subsets [4]
+Candidates to classify: 76583
+Ground truth nodules: 128
+Evaluating: 100%|███████████████████████████████████████████████████████████████████████████████████████| 89/89 [05:01<00:00,  3.39s/it]
+
+============================================================
+  FROC EVALUATION RESULTS
+============================================================
+Scans evaluated:    89
+Ground truth nodules: 128
+True positives:     170
+False positives:    76413
+
+Sensitivity at FP/scan rates:
+  0.125 FP/scan: 0.2188
+  0.250 FP/scan: 0.3984
+  0.500 FP/scan: 0.5234
+  1.000 FP/scan: 0.7266
+  2.000 FP/scan: 0.8750
+  4.000 FP/scan: 0.9688
+  8.000 FP/scan: 1.0703
+
+  FROC Score: 0.6830
+============================================================
+
+Detections saved to practice4/weights/stage2/fold5/detections.csv
+
+============================================================
+  OVERALL SUMMARY — ALL FOLDS
+============================================================
+  Fold 1: FROC = 0.7041
+  Fold 2: FROC = 0.7902
+  Fold 3: FROC = 0.7444
+  Fold 4: FROC = 0.7359
+  Fold 5: FROC = 0.6830
+
+  Average FROC: 0.7315
+============================================================
