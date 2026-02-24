@@ -12,11 +12,8 @@ import numpy as np
 import pandas as pd
 import os
 import sys
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from matplotlib.colors import ListedColormap
 import argparse
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -43,7 +40,7 @@ def visualize_stage1(args, device):
     
     # Find some scans from subset 0 (fold 1 val set)
     subset_dir = os.path.join(args.data_dir, 'subset0', 'subset0')
-    seg_dir = os.path.join(args.data_dir, 'seg-lungs-LUNA16')
+    seg_dir = os.path.join(args.data_dir, 'seg-lungs-LUNA16', 'seg-lungs-LUNA16')
     
     mhd_files = sorted([f for f in os.listdir(subset_dir) if f.endswith('.mhd')])
     selected = mhd_files[:args.num_scans]
