@@ -22,7 +22,7 @@ plt.rcParams.update({
     'figure.dpi': 150,
 })
 
-COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+COLORS = ['blue', 'orange', 'green', 'red', 'purple']
 
 
 # ============================================================
