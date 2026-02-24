@@ -6,8 +6,6 @@ LUNA16 Loss Functions:
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-
 
 class DiceLoss(nn.Module):
     """Dice loss for segmentation."""

@@ -265,7 +265,7 @@ def main():
     all_results = {}
     
     for fold in folds:
-        val_subset = fold - 1  # fold 1 → subset 0, fold 2 → subset 1, etc.
+        val_subset = fold - 1  # fold 1 -> subset 0, fold 2 -> subset 1, etc.
         model_path = os.path.join(args.model_dir, f'fold{fold}', 'best_model.pth')
         output_path = os.path.join(args.model_dir, f'fold{fold}', 'detections.csv')
         
@@ -277,7 +277,6 @@ def main():
         print(f'  FOLD {fold}/5 — Evaluating on subset {val_subset}')
         print(f'{"#"*60}')
         
-        # Create a simple namespace for evaluate()
         eval_args = argparse.Namespace(
             model=model_path,
             data_dir=args.data_dir,

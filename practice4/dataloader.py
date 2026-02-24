@@ -8,7 +8,7 @@ import os
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
+from torch.utils.data import Dataset, DataLoader
 import SimpleITK as sitk
 import scipy.ndimage
 from collections import OrderedDict
