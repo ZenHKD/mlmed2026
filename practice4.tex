@@ -391,16 +391,15 @@ Table~\ref{tab:froc_comparison} compares the FROC score of my pipeline against p
 
 \begin{table}[H]
 \centering
-\caption{Comparison of FROC scores on the LUNA16 dataset.}
+\caption{Comparison of FROC scores on the LUNA16 dataset. Published results are taken from \cite{liu2019_3dfpn}, \cite{yang2018_s4nd}, and \cite{zhu2018_deeplung}.}
 \label{tab:froc_comparison}
 \begin{tabular}{l|c|c|c}
 \hline
 \textbf{Method} & \textbf{Params} & \textbf{FROC} & \textbf{Subsets} \\
 \hline
-3DFPN-HS$^2$ (2019)  & $\sim$28M  & 0.906 & 10 \\
-S4ND (2018)           & $\sim$25M  & 0.897 & 10 \\
-DeepLung (2018)       & $\sim$141M & 0.842 & 10 \\
-3DFCN (2017)          & $\sim$15M  & 0.839 & 10 \\
+3DFPN-HS$^2$~\cite{liu2019_3dfpn} (2019) & - & 0.952 & 10 \\
+S4ND~\cite{yang2018_s4nd} (2018)          & $\sim$4.6M & 0.897 & 10 \\
+DeepLung~\cite{zhu2018_deeplung} (2018)   & - & 0.834 & 10 \\
 \hline
 \textbf{Mine}         & \textbf{5.0M}   & \textbf{0.731} & \textbf{5} \\
 \hline
@@ -486,5 +485,27 @@ Figures~\ref{fig:seg_vis1}--\ref{fig:seg_vis3} show sample lung segmentation pre
 \caption{Stage 2 detection: Scan 3, Nodule 1 close-up.}
 \label{fig:det_nodule31}
 \end{figure*}
+
+\begin{thebibliography}{9}
+
+\bibitem{liu2019_3dfpn}
+Liu, J., Cao, L., Akin, O., and Tian, Y.
+\newblock 3DFPN-HS$^2$: 3D Feature Pyramid Network Based High Sensitivity and Specificity Pulmonary Nodule Detection.
+\newblock \textit{arXiv preprint arXiv:1906.03467}, 2019.
+\newblock \url{https://arxiv.org/abs/1906.03467}
+
+\bibitem{yang2018_s4nd}
+Yang, J., Veasey, T., Yuan, K., and Tsaftaris, S.~A.
+\newblock S4ND: Single-Shot Single-Scale Lung Nodule Detection.
+\newblock In \textit{Medical Image Computing and Computer Assisted Intervention (MICCAI)}, 2018.
+\newblock \url{https://arxiv.org/abs/1805.02279}
+
+\bibitem{zhu2018_deeplung}
+Zhu, W., Liu, C., Fan, W., and Xie, X.
+\newblock DeepLung: 3D Deep Convolutional Nets for Automated Pulmonary Nodule Detection and Classification.
+\newblock In \textit{IEEE Winter Conference on Applications of Computer Vision (WACV)}, 2018.
+\newblock \url{https://arxiv.org/abs/1709.05538}
+
+\end{thebibliography}
 
 \end{document}
